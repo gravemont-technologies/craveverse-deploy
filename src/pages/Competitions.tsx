@@ -5,8 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Users, Upload } from "lucide-react";
+import { Trophy, Users, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import SylviaChat from "@/components/SylviaChat";
 
 const Competitions = () => {
   const [teamName, setTeamName] = useState("");
@@ -14,6 +15,9 @@ const Competitions = () => {
   const [category, setCategory] = useState("");
   const [points, setPoints] = useState("");
   const { toast } = useToast();
+  const [proofs, setProofs] = useState<Record<string, string[]>>(
+    JSON.parse(localStorage.getItem("proofs") || "{}")
+  );
 
   const handleCreateTeam = () => {
     if (!teamName || !goal || !category || !points) {
@@ -49,6 +53,27 @@ const Competitions = () => {
   };
 
   const teams = JSON.parse(localStorage.getItem("teams") || "[]");
+
+  const handleUpload = (teamName: string, file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const updated = { ...proofs };
+      updated[teamName] = [...(updated[teamName] || []), dataUrl];
+      setProofs(updated);
+      localStorage.setItem("proofs", JSON.stringify(updated));
+      toast({ title: "Proof saved locally", description: "Great accountability!" });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeProof = (teamName: string, idx: number) => {
+    const updated = { ...proofs };
+    updated[teamName]?.splice(idx, 1);
+    setProofs(updated);
+    localStorage.setItem("proofs", JSON.stringify(updated));
+  };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -163,10 +188,24 @@ const Competitions = () => {
                       </span>
                     </div>
                     
-                    <Button variant="outline" className="w-full mt-4">
-                      <Upload className="mr-2 w-4 h-4" />
-                      Upload Proof
-                    </Button>
+                    <label className="w-full mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover:bg-accent/10">
+                      <Upload className="w-4 h-4" />
+                      <span>Upload Proof</span>
+                      <input type="file" accept="image/*" className="hidden" onChange={(e)=>handleUpload(team.teamName, e.target.files?.[0]||null)} />
+                    </label>
+
+                    {proofs[team.teamName]?.length ? (
+                      <div className="grid grid-cols-3 gap-2 mt-4">
+                        {proofs[team.teamName].map((src, i) => (
+                          <div key={i} className="relative group">
+                            <img src={src} className="w-full h-20 object-cover rounded" />
+                            <button onClick={()=>removeProof(team.teamName, i)} className="absolute -top-2 -right-2 bg-card border border-border rounded-full p-1 opacity-0 group-hover:opacity-100 transition">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </Card>
                 </motion.div>
               ))
@@ -174,6 +213,7 @@ const Competitions = () => {
           </div>
         </div>
       </div>
+      <SylviaChat />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ThumbsUp, Send, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import SylviaChat from "@/components/SylviaChat";
 
 interface Tip {
   id: number;
@@ -155,6 +156,7 @@ const Tips = () => {
           ))}
         </div>
       </div>
+      <SylviaChat />
     </div>
   );
 };

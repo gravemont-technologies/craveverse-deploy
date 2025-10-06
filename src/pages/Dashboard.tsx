@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import MuscularMan from "@/components/MuscularMan";
 import BadgeDisplay from "@/components/BadgeDisplay";
+import SylviaChat from "@/components/SylviaChat";
 
 const cravings = ["Sugar", "NoFap", "Smoking", "Procrastination", "Shopping"];
 
@@ -80,25 +81,62 @@ const Dashboard = () => {
   };
 
   const shareAchievement = async () => {
-    const message = `I beat ${streak} days of ${selectedCraving}! Join me on CraveVerse to conquer your cravings. ${window.location.origin}`;
+    const shareUrl = `${window.location.origin}?share=achievement&craving=${encodeURIComponent(selectedCraving)}&days=${streak}`;
+    const message = `I beat ${streak} days of ${selectedCraving}! Join me on CraveVerse to conquer your cravings.`;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: "CraveVerse Achievement",
           text: message,
-          url: window.location.origin,
+          url: shareUrl,
         });
       } catch (err) {
         console.error("Share failed:", err);
       }
     } else {
-      navigator.clipboard.writeText(message);
+      navigator.clipboard.writeText(`${message} ${shareUrl}`);
       toast({
         title: "Copied to clipboard!",
         description: "Share your achievement with friends.",
       });
     }
+  };
+
+  // Voice input: Resist / Relapse / Stress N
+  const startVoice = () => {
+    const SpeechRecognition =
+      // @ts-ignore
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Voice not supported", description: "Try Chrome mobile" });
+      return;
+    }
+    const recog = new SpeechRecognition();
+    // @ts-ignore
+    recog.lang = "en-US";
+    // @ts-ignore
+    recog.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript.toLowerCase();
+      if (transcript.includes("resist")) {
+        handleResist();
+        return;
+      }
+      if (transcript.includes("relapse")) {
+        handleRelapse();
+        return;
+      }
+      const stressMatch = transcript.match(/stress\s*(\d+)/);
+      if (stressMatch) {
+        const value = Math.max(1, Math.min(10, parseInt(stressMatch[1])));
+        setStress([value]);
+        toast({ title: `Stress set to ${value}` });
+      } else {
+        toast({ title: "Heard:", description: transcript });
+      }
+    };
+    // @ts-ignore
+    recog.start();
   };
 
   const cardBgColor = stress[0] > 7 
@@ -190,7 +228,7 @@ const Dashboard = () => {
               </div>
 
               <div className="flex gap-4">
-                <Button variant="outline" className="flex-1">
+                <Button variant="outline" className="flex-1" onClick={startVoice}>
                   <Mic className="mr-2" />
                   Voice
                 </Button>
@@ -270,6 +308,7 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
+      <SylviaChat />
     </div>
   );
 };
