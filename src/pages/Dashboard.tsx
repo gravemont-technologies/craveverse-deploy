@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import MoodWrapper from '../components/MoodWrapper';
 import StressSlider from '../components/StressSlider';
 import VoiceInput from '../components/VoiceInput';
+import EmergencyTab from '../components/EmergencyTab';
+import CompetitionTab from '../components/CompetitionTab';
 
 const Rewards = lazy(() => import('../components/Rewards'));
 
@@ -25,9 +27,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, updateStress, onVoiceRe
         </Suspense>
         <StressSlider value={userData.stress} onChange={updateStress} />
         <VoiceInput onResult={onVoiceResult} />
+
+        {/* Add tabs */}
+        <CompetitionTab userId={userData.id} />
+        <EmergencyTab userId={userData.id} />
       </div>
     </MoodWrapper>
   );
 };
 
 export default Dashboard;
+
