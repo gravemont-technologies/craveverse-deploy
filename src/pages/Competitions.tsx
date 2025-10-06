@@ -59,7 +59,7 @@ const Competitions = () => {
           className="mb-8"
         >
           <h1 className="text-display mb-2">Team Competitions</h1>
-          <p className="text-muted-foreground">Join forces, conquer together</p>
+          <p className="text-muted-foreground">Create or join team challenges. Upload photo proof of your progress daily to stay accountable!</p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-6">

@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { TrendingUp, Heart, DollarSign, Sparkles } from "lucide-react";
+import MuscularMan from "@/components/MuscularMan";
 
 const Projections = () => {
   const streak = parseInt(localStorage.getItem("streak") || "0");
+  const craving = localStorage.getItem("currentCraving") || "Sugar";
+  const musclePct = parseFloat(localStorage.getItem("musclePct") || "0");
   
   // Mock projection data based on streak
   const projections = [
@@ -42,7 +45,7 @@ const Projections = () => {
           className="mb-8"
         >
           <h1 className="text-display mb-2">Your Future</h1>
-          <p className="text-muted-foreground">Data-backed projections of your transformation</p>
+          <p className="text-muted-foreground">See data-backed projections of your transformation. Check in daily to watch your future self evolve!</p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -125,6 +128,41 @@ const Projections = () => {
             <span>Start</span>
             <span>Current ({streak} days)</span>
             <span>+30 days</span>
+          </div>
+        </Card>
+
+        {/* Future Vision Panel */}
+        <Card className="card-elevated mt-8">
+          <h2 className="text-heading mb-6">Your Future Self</h2>
+          
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="flex-1">
+              <MuscularMan progress={musclePct} />
+            </div>
+            
+            <div className="flex-1 space-y-4">
+              <div>
+                <p className="text-2xl font-bold text-primary mb-2">
+                  {craving === "Sugar" && `+${(streak * 0.05).toFixed(1)} years gained`}
+                  {craving === "Smoking" && `+${(streak * 0.1).toFixed(1)} years gained`}
+                  {craving === "Procrastination" && `$${streak * 500} saved`}
+                  {craving === "Shopping" && `$${streak * 500} saved`}
+                  {craving === "NoFap" && "Enhanced fulfillment unlocked"}
+                </p>
+                <p className="text-sm text-muted-foreground">Your current progress</p>
+              </div>
+              
+              <div className="pt-4 border-t border-border">
+                <p className="text-lg font-bold text-destructive mb-2">
+                  {craving === "Sugar" && `-${(streak * 0.05 * 0.5).toFixed(1)} years if you stop now`}
+                  {craving === "Smoking" && `-${(streak * 0.1 * 0.5).toFixed(1)} years if you stop now`}
+                  {craving === "Procrastination" && `-$${streak * 250} if you stop now`}
+                  {craving === "Shopping" && `-$${streak * 250} if you stop now`}
+                  {craving === "NoFap" && "Potential setback if you stop now"}
+                </p>
+                <p className="text-sm text-muted-foreground">Reminder: Keep going!</p>
+              </div>
+            </div>
           </div>
         </Card>
       </div>

@@ -7,12 +7,12 @@ const Landing = () => {
   const navigate = useNavigate();
 
   const features = [
-    { icon: Target, title: "Select Craving", description: "Choose your challenge" },
-    { icon: Trophy, title: "Personality Quiz", description: "Tailored experience" },
-    { icon: Users, title: "Track & Resist", description: "One-tap logging" },
-    { icon: TrendingUp, title: "Earn Rewards", description: "Visualize progress" },
-    { icon: MessageCircle, title: "Team Up", description: "Join competitions" },
-    { icon: BarChart3, title: "See Projections", description: "Future insights" },
+    { icon: Target, title: "Dashboard", description: "Track cravings daily. Resist/relapse buttons, stress slider, earn coins & badges every 7 days!" },
+    { icon: Trophy, title: "Personality Quiz", description: "5 questions shape your experience. Get humor-based or serious nudges!" },
+    { icon: Users, title: "Teams", description: "Create/join challenges with friends. Upload photo proof to stay accountable!" },
+    { icon: TrendingUp, title: "Projections", description: "See your future self: lifespan gains, savings. Check daily for motivation!" },
+    { icon: MessageCircle, title: "Tips Forum", description: "Share & discover strategies from the community. Like-sorted wisdom!" },
+    { icon: BarChart3, title: "Emergency SOS", description: "Instant help when cravings strike. Tailored rituals based on severity!" },
   ];
 
   return (

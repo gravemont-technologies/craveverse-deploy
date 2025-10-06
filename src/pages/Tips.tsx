@@ -1,25 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ThumbsUp, Send } from "lucide-react";
+import { ThumbsUp, Send, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface Tip {
   id: number;
   text: string;
   likes: number;
+  author: string;
+  authorInitial: string;
 }
 
 const Tips = () => {
   const [tipText, setTipText] = useState("");
+  const [userName, setUserName] = useState("");
   const [tips, setTips] = useState<Tip[]>([
-    { id: 1, text: "When cravings hit, do 10 pushups. Works every time!", likes: 42 },
-    { id: 2, text: "Keep your hands busy with a stress ball or fidget spinner", likes: 38 },
-    { id: 3, text: "Call a friend instead of giving in. Connection beats cravings.", likes: 35 },
+    { id: 1, text: "When cravings hit, do 10 pushups. Works every time!", likes: 42, author: "Alex", authorInitial: "A" },
+    { id: 2, text: "Keep your hands busy with a stress ball or fidget spinner", likes: 38, author: "Jordan", authorInitial: "J" },
+    { id: 3, text: "Call a friend instead of giving in. Connection beats cravings.", likes: 35, author: "Sam", authorInitial: "S" },
   ]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedName = localStorage.getItem("userName") || "Anonymous";
+    setUserName(storedName);
+  }, []);
 
   const profanityFilter = (text: string) => {
     const badWords = ["damn", "hell"]; // simplified filter
@@ -58,6 +67,8 @@ const Tips = () => {
       id: Date.now(),
       text: tipText,
       likes: 0,
+      author: userName,
+      authorInitial: userName.charAt(0).toUpperCase(),
     };
 
     setTips([newTip, ...tips]);
@@ -84,7 +95,7 @@ const Tips = () => {
           className="mb-8"
         >
           <h1 className="text-display mb-2">Community Tips</h1>
-          <p className="text-muted-foreground">Share wisdom, inspire others</p>
+          <p className="text-muted-foreground">Share strategies and inspire others. Browse daily for fresh insights!</p>
         </motion.div>
 
         {/* Post Tip */}
@@ -118,7 +129,17 @@ const Tips = () => {
               transition={{ delay: index * 0.05 }}
             >
               <Card className="card-elevated hover:shadow-[var(--shadow-glow)] transition-shadow duration-300">
-                <p className="mb-4">{tip.text}</p>
+                <div className="flex items-start gap-3 mb-4">
+                  <Avatar>
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {tip.authorInitial}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm mb-1">{tip.author}</p>
+                    <p>{tip.text}</p>
+                  </div>
+                </div>
                 
                 <Button
                   variant="ghost"
