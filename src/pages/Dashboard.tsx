@@ -4,6 +4,8 @@ import StressSlider from '../components/StressSlider';
 import VoiceInput from '../components/VoiceInput';
 import EmergencyTab from '../components/EmergencyTab';
 import CompetitionTab from '../components/CompetitionTab';
+import TipsForum from '../components/TipsForum';
+import Projections from '../components/Projections';
 
 const Rewards = lazy(() => import('../components/Rewards'));
 
@@ -28,13 +30,20 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, updateStress, onVoiceRe
         <StressSlider value={userData.stress} onChange={updateStress} />
         <VoiceInput onResult={onVoiceResult} />
 
-        {/* Add tabs */}
         <CompetitionTab userId={userData.id} />
         <EmergencyTab userId={userData.id} />
+        <TipsForum userId={userData.id} />
+        <Projections
+          musclePct={userData.musclePct}
+          lungPct={userData.lungPct}
+          wealth={userData.wealth}
+          day={userData.day}
+        />
       </div>
     </MoodWrapper>
   );
 };
 
 export default Dashboard;
+
 
