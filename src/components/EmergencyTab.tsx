@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { useEventLogger } from '../hooks/useEventLogger';
+// src/components/EmergencyTab.tsx
+import React, { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useEventLogger } from "../hooks/useEventLogger";
 
 type EmergencyTabProps = { userId: string };
 
@@ -8,18 +10,32 @@ const EmergencyTab: React.FC<EmergencyTabProps> = ({ userId }) => {
   const { logEvent } = useEventLogger(userId);
 
   const handleEmergency = async () => {
-    // Log event
-    logEvent({ type: 'emergency', data: { severity } });
-
-    // Ritual guidance (simplified)
-    alert(`Ritual started for severity ${severity}:\n- 30s breathing\n- Goal recall\n- Recommit`);
-
-    // Shareable message
-    if (navigator.share) {
-      navigator.share({
-        title: 'CraveVerse Emergency',
-        text: `Committed ${severity} severity emergency. Help me stay strong!`
+    try {
+      // Log to supabase emergency_events
+      const ritual_steps = [
+        { step: "breathing", duration_s: 30, completed: true, at: new Date().toISOString() }
+      ];
+      await supabase.from("emergency_events").insert({
+        user_id: userId,
+        severity,
+        ritual_steps,
+        shared: !!navigator.share,
+        metadata: { via: "frontend" }
       });
+
+      logEvent({ type: "emergency_triggered", data: { severity } });
+
+      // Ritual guidance (frontend)
+      alert(`Ritual started for severity ${severity}:\n- 30s breathing\n- Goal recall\n- Recommit`);
+
+      if (navigator.share) {
+        navigator.share({
+          title: "CraveVerse Emergency",
+          text: `I need support: severity ${severity} emergency. Help me stay strong!`
+        }).catch(() => {});
+      }
+    } catch (err) {
+      console.error("handleEmergency error", err);
     }
   };
 
@@ -34,10 +50,7 @@ const EmergencyTab: React.FC<EmergencyTabProps> = ({ userId }) => {
         onChange={(e) => setSeverity(Number(e.target.value))}
         className="w-64"
       />
-      <button
-        onClick={handleEmergency}
-        className="bg-red-500 text-white font-bold py-2 px-6 rounded-full animate-pulse"
-      >
+      <button onClick={handleEmergency} className="bg-red-500 text-white font-bold py-2 px-6 rounded-full animate-pulse">
         Emergency!
       </button>
     </div>
