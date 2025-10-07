@@ -1,21 +1,21 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster.tsx";
+import { Toaster as Sonner } from "@/components/ui/sonner.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Quiz from "./pages/Quiz";
-import Dashboard from "./pages/Dashboard";
-import Competitions from "./pages/Competitions";
-import Tips from "./pages/Tips";
-import Projections from "./pages/Projections";
-import Emergency from "./pages/Emergency";
-import Rewards from "./pages/Rewards";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import BottomNav from "./components/BottomNav";
-import ThemeToggle from "./components/ThemeToggle";
-import SylviaChat from "./components/SylviaChat";
+import Landing from "@/pages/Landing.tsx";
+import Quiz from "@/pages/Quiz.tsx";
+import Dashboard from "@/pages/Dashboard.tsx";
+import Competitions from "@/pages/Competitions.tsx";
+import Tips from "@/pages/Tips.tsx";
+import Projections from "@/pages/Projections.tsx";
+import Emergency from "@/pages/Emergency.tsx";
+import Rewards from "@/pages/Rewards.tsx";
+import Profile from "@/pages/Profile.tsx";
+import NotFound from "@/pages/NotFound.tsx";
+import BottomNav from "@/components/BottomNav.tsx";
+import ThemeToggle from "@/components/ThemeToggle.tsx";
+import SylviaChat from "@/components/SylviaChat.tsx";
 
 const queryClient = new QueryClient();
 
