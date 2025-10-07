@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Trophy, Lightbulb, TrendingUp, User } from "lucide-react";
+import { Home, Trophy, Lightbulb, TrendingUp, User, AlertTriangle } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -8,6 +9,7 @@ const BottomNav = () => {
     { path: "/dashboard", icon: Home, label: "Home" },
     { path: "/competitions", icon: Trophy, label: "Teams" },
     { path: "/tips", icon: Lightbulb, label: "Tips" },
+    { path: "/emergency", icon: AlertTriangle, label: "SOS" },
     { path: "/projections", icon: TrendingUp, label: "Future" },
     { path: "/profile", icon: User, label: "Profile" },
   ];
@@ -30,6 +32,9 @@ const BottomNav = () => {
             </Link>
           );
         })}
+        <div className="absolute right-2">
+          <ThemeToggle />
+        </div>
       </div>
     </nav>
   );
