@@ -1,17 +1,18 @@
-import React, { Suspense, lazy } from 'react'; 
-import MoodWrapper from '../components/MoodWrapper';
-import StressSlider from '../components/StressSlider';
-import VoiceInput from '../components/VoiceInput';
-import EmergencyTab from '../components/EmergencyTab';
-import CompetitionTab from '../components/CompetitionTab';
-import TipsForum from '../components/TipsForum';
-import Projections from '../components/Projections';
-import { useUpdateHabit } from '../hooks/useUpdateHabit';
+// src/pages/Dashboard.tsx
+import React, { Suspense, lazy } from "react";
+import MoodWrapper from "../components/MoodWrapper";
+import StressSlider from "../components/StressSlider";
+import VoiceInput from "../components/VoiceInput";
+import EmergencyTab from "../components/EmergencyTab";
+import CompetitionTab from "../components/CompetitionTab";
+import TipsForum from "../components/TipsForum";
+import Projections from "../components/Projections";
+import { useUpdateHabit } from "../hooks/useUpdateHabit";
 
-const Rewards = lazy(() => import('../components/Rewards'));
+const Rewards = lazy(() => import("../components/Rewards"));
 
 type DashboardProps = {
-  userData: any;
+  userData: any; // { id, stress, streak, relapse, musclePct ... }
   updateStress: (val: number) => void;
   onVoiceResult: (text: string) => void;
 };
@@ -19,23 +20,20 @@ type DashboardProps = {
 const Dashboard: React.FC<DashboardProps> = ({ userData, updateStress, onVoiceResult }) => {
   const { updateHabit } = useUpdateHabit(userData.id);
 
-  // Example function to handle a habit resist
   const handleResistHabit = async (habit: string) => {
     try {
-      await updateHabit(habit, { resisted: true });
-      console.log(`${habit} resisted successfully!`);
+      await updateHabit(habit, { resisted: true, coins_delta: 10, streak_delta: 1 });
+      // optimistic UI update can be done here
     } catch (err) {
-      console.error('Failed to update habit', err);
+      console.error("Failed to update habit", err);
     }
   };
 
-  // Example function to handle a habit relapse
   const handleRelapseHabit = async (habit: string) => {
     try {
-      await updateHabit(habit, { resisted: false, relapsed: true });
-      console.log(`${habit} relapse recorded.`);
+      await updateHabit(habit, { relapsed: true, coins_delta: -5, streak_delta: -1 });
     } catch (err) {
-      console.error('Failed to update habit', err);
+      console.error("Failed to record relapse", err);
     }
   };
 
@@ -43,28 +41,15 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, updateStress, onVoiceRe
     <MoodWrapper stress={userData.stress} streak={userData.streak} relapse={userData.relapse}>
       <div className="p-6 flex flex-col items-center gap-6">
         <Suspense fallback={<div>Loading Rewards...</div>}>
-          <Rewards
-            musclePct={userData.musclePct}
-            lungPct={userData.lungPct}
-            wealth={userData.wealth}
-            soulmateLevel={userData.soulmateLevel}
-            onResist={(habit: string) => handleResistHabit(habit)}
-            onRelapse={(habit: string) => handleRelapseHabit(habit)}
-          />
+          <Rewards userId={userData.id} habitType={userData.currentCraving} />
         </Suspense>
-
         <StressSlider value={userData.stress} onChange={updateStress} />
         <VoiceInput onResult={onVoiceResult} />
 
         <CompetitionTab userId={userData.id} />
         <EmergencyTab userId={userData.id} />
         <TipsForum userId={userData.id} />
-        <Projections
-          musclePct={userData.musclePct}
-          lungPct={userData.lungPct}
-          wealth={userData.wealth}
-          day={userData.day}
-        />
+        <Projections userId={userData.id} />
       </div>
     </MoodWrapper>
   );
