@@ -1,4 +1,4 @@
-Write-Host "🔥 Stopping all Vite servers and conflicting Node.js processes..." -ForegroundColor Red
+Write-Host "Stopping all Vite servers and conflicting Node.js processes..." -ForegroundColor Red
 Write-Host ""
 
 # Kill all Node.js processes
@@ -14,7 +14,7 @@ Get-Process -Name "node" -ErrorAction SilentlyContinue | ForEach-Object {
 }
 
 Write-Host ""
-Write-Host "✅ All Node.js processes terminated" -ForegroundColor Green
+Write-Host "All Node.js processes terminated" -ForegroundColor Green
 Write-Host ""
-Write-Host "🚀 You can now run: npm run dev" -ForegroundColor Cyan
+Write-Host "You can now run: npm run dev" -ForegroundColor Cyan
 Write-Host ""
