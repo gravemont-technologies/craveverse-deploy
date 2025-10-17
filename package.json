@@ -11,7 +11,8 @@
     "setup": "node scripts/setup.js",
     "setup:windows": "scripts\\setup.bat",
     "setup:unix": "./scripts/setup.sh",
-    "setup:powershell": "powershell -ExecutionPolicy Bypass -File scripts\\setup.ps1"
+    "setup:powershell": "powershell -ExecutionPolicy Bypass -File scripts\\setup.ps1",
+    "clean": "powershell -ExecutionPolicy Bypass -File scripts\\clean-environment.ps1"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.5",
