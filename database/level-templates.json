@@ -1,0 +1,562 @@
+{
+  "nofap": [
+    {
+      "level_number": 1,
+      "title": "Day 1: Acknowledge the Shadow",
+      "description": "Understanding your triggers and acknowledging your starting point.",
+      "challenge_text": "Write down 3 situations that trigger your craving. Be honest about your current state.",
+      "success_criteria": "Complete daily check-in + submit 3 triggers",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 15,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 2,
+      "title": "Day 2: The Foundation",
+      "description": "Building awareness and setting your intention.",
+      "challenge_text": "Create a morning routine that includes 5 minutes of meditation or deep breathing.",
+      "success_criteria": "Complete morning routine + log your mood",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 20,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 3,
+      "title": "Day 3: Identify Patterns",
+      "description": "Recognizing your behavioral patterns and triggers.",
+      "challenge_text": "Track your energy levels and mood throughout the day. Note when you feel most vulnerable.",
+      "success_criteria": "Complete energy tracking + identify 2 vulnerable times",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 25,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 4,
+      "title": "Day 4: The Substitution",
+      "description": "Learning to replace the habit with healthier alternatives.",
+      "challenge_text": "When you feel a craving, do 20 push-ups or take a cold shower instead.",
+      "success_criteria": "Complete substitution exercise + log the experience",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 30,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 5,
+      "title": "Day 5: The Accountability",
+      "description": "Building support systems and accountability.",
+      "challenge_text": "Tell one trusted person about your journey. Ask them to check in with you daily.",
+      "success_criteria": "Share your goal + establish accountability partner",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 20,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 6,
+      "title": "Day 6: The Environment",
+      "description": "Creating a supportive environment for success.",
+      "challenge_text": "Remove or block all triggers from your devices and living space.",
+      "success_criteria": "Clean environment + remove 3+ triggers",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 45,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 7,
+      "title": "Day 7: The First Week",
+      "description": "Celebrating your first week and reflecting on progress.",
+      "challenge_text": "Write a letter to your future self about why you're doing this and what you hope to achieve.",
+      "success_criteria": "Complete reflection letter + celebrate milestone",
+      "xp_reward": 150,
+      "coin_reward": 75,
+      "estimated_duration_minutes": 30,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 8,
+      "title": "Day 8: The Routine",
+      "description": "Establishing consistent daily habits.",
+      "challenge_text": "Create a structured daily schedule that includes work, exercise, and leisure time.",
+      "success_criteria": "Create schedule + follow it for one day",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 35,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 9,
+      "title": "Day 9: The Social Connection",
+      "description": "Building meaningful relationships and social support.",
+      "challenge_text": "Reach out to a friend or family member and have a meaningful conversation.",
+      "success_criteria": "Make social connection + log the interaction",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 40,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 10,
+      "title": "Day 10: The Milestone",
+      "description": "Reaching your first major milestone and building momentum.",
+      "challenge_text": "Reflect on your progress and write down 3 positive changes you've noticed.",
+      "success_criteria": "Complete reflection + identify 3 positive changes",
+      "xp_reward": 200,
+      "coin_reward": 100,
+      "estimated_duration_minutes": 25,
+      "difficulty": "easy"
+    }
+  ],
+  "sugar": [
+    {
+      "level_number": 1,
+      "title": "Day 1: The Sweet Truth",
+      "description": "Understanding your sugar consumption and its impact.",
+      "challenge_text": "Track everything you eat today and identify all sources of added sugar.",
+      "success_criteria": "Complete food log + identify 5+ sugar sources",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 20,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 2,
+      "title": "Day 2: The Clean Start",
+      "description": "Beginning your sugar-free journey with intention.",
+      "challenge_text": "Start your day with a protein-rich breakfast and avoid all added sugars.",
+      "success_criteria": "Eat clean breakfast + avoid added sugars",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 15,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 3,
+      "title": "Day 3: The Cravings",
+      "description": "Learning to manage sugar cravings effectively.",
+      "challenge_text": "When you crave sugar, drink a glass of water and wait 10 minutes before deciding.",
+      "success_criteria": "Use water technique + wait 10 minutes",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 15,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 4,
+      "title": "Day 4: The Substitution",
+      "description": "Finding healthy alternatives to satisfy your sweet tooth.",
+      "challenge_text": "Replace one sugary snack with a piece of fruit or nuts.",
+      "success_criteria": "Make healthy substitution + log the experience",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 20,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 5,
+      "title": "Day 5: The Energy",
+      "description": "Understanding how sugar affects your energy levels.",
+      "challenge_text": "Track your energy levels throughout the day and note any crashes.",
+      "success_criteria": "Complete energy tracking + identify patterns",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 25,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 6,
+      "title": "Day 6: The Hydration",
+      "description": "Using proper hydration to reduce sugar cravings.",
+      "challenge_text": "Drink 8 glasses of water today and notice how it affects your cravings.",
+      "success_criteria": "Drink 8 glasses + log craving changes",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 30,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 7,
+      "title": "Day 7: The First Week",
+      "description": "Celebrating your first week sugar-free.",
+      "challenge_text": "Reflect on how you feel without sugar and write down 3 positive changes.",
+      "success_criteria": "Complete reflection + identify 3 positive changes",
+      "xp_reward": 150,
+      "coin_reward": 75,
+      "estimated_duration_minutes": 20,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 8,
+      "title": "Day 8: The Meal Prep",
+      "description": "Preparing healthy meals to avoid sugar temptations.",
+      "challenge_text": "Prepare 3 healthy, sugar-free meals for the next day.",
+      "success_criteria": "Meal prep 3 meals + avoid added sugars",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 45,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 9,
+      "title": "Day 9: The Social Challenge",
+      "description": "Navigating social situations without sugar.",
+      "challenge_text": "Attend a social event and choose sugar-free options.",
+      "success_criteria": "Navigate social event + choose healthy options",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 60,
+      "difficulty": "hard"
+    },
+    {
+      "level_number": 10,
+      "title": "Day 10: The Milestone",
+      "description": "Reaching your first major milestone in the sugar-free journey.",
+      "challenge_text": "Celebrate your progress and plan your next 10 days.",
+      "success_criteria": "Celebrate milestone + plan next phase",
+      "xp_reward": 200,
+      "coin_reward": 100,
+      "estimated_duration_minutes": 30,
+      "difficulty": "easy"
+    }
+  ],
+  "shopping": [
+    {
+      "level_number": 1,
+      "title": "Day 1: The Audit",
+      "description": "Understanding your current spending habits and triggers.",
+      "challenge_text": "Review your last month's bank statements and categorize all purchases.",
+      "success_criteria": "Complete spending audit + categorize purchases",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 45,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 2,
+      "title": "Day 2: The Pause",
+      "description": "Learning to pause before making purchases.",
+      "challenge_text": "Before any purchase today, wait 24 hours and ask yourself if you really need it.",
+      "success_criteria": "Use 24-hour rule + avoid impulse purchases",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 20,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 3,
+      "title": "Day 3: The Budget",
+      "description": "Creating a realistic budget for your needs and wants.",
+      "challenge_text": "Create a monthly budget that includes savings and limits discretionary spending.",
+      "success_criteria": "Create budget + set spending limits",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 30,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 4,
+      "title": "Day 4: The Unsubscribe",
+      "description": "Removing temptations from your digital environment.",
+      "challenge_text": "Unsubscribe from all shopping emails and delete shopping apps from your phone.",
+      "success_criteria": "Remove digital temptations + unsubscribe from emails",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 25,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 5,
+      "title": "Day 5: The List",
+      "description": "Creating a wishlist system to delay gratification.",
+      "challenge_text": "Create a wishlist of items you want and review it after 7 days.",
+      "success_criteria": "Create wishlist + set 7-day review",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 20,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 6,
+      "title": "Day 6: The Alternative",
+      "description": "Finding free or low-cost alternatives to shopping.",
+      "challenge_text": "Find 3 free activities to do instead of shopping when you feel the urge.",
+      "success_criteria": "Identify 3 free activities + try one",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 30,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 7,
+      "title": "Day 7: The First Week",
+      "description": "Reflecting on your first week of controlled spending.",
+      "challenge_text": "Calculate how much money you saved this week and plan how to use it.",
+      "success_criteria": "Calculate savings + plan usage",
+      "xp_reward": 150,
+      "coin_reward": 75,
+      "estimated_duration_minutes": 25,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 8,
+      "title": "Day 8: The Savings",
+      "description": "Building a savings habit to replace shopping.",
+      "challenge_text": "Transfer the amount you would have spent shopping into a savings account.",
+      "success_criteria": "Transfer money to savings + log the amount",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 15,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 9,
+      "title": "Day 9: The Social",
+      "description": "Navigating social situations without overspending.",
+      "challenge_text": "Attend a social event and stick to your budget without feeling deprived.",
+      "success_criteria": "Navigate social event + stay within budget",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 60,
+      "difficulty": "hard"
+    },
+    {
+      "level_number": 10,
+      "title": "Day 10: The Milestone",
+      "description": "Celebrating your first major milestone in financial control.",
+      "challenge_text": "Review your progress and set a new financial goal for the next month.",
+      "success_criteria": "Review progress + set new goal",
+      "xp_reward": 200,
+      "coin_reward": 100,
+      "estimated_duration_minutes": 30,
+      "difficulty": "easy"
+    }
+  ],
+  "smoking_vaping": [
+    {
+      "level_number": 1,
+      "title": "Day 1: The Decision",
+      "description": "Making the firm decision to quit and understanding your motivation.",
+      "challenge_text": "Write down 5 reasons why you want to quit and read them whenever you feel tempted.",
+      "success_criteria": "Write 5 reasons + create reminder system",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 20,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 2,
+      "title": "Day 2: The Preparation",
+      "description": "Preparing your environment and support system for success.",
+      "challenge_text": "Remove all smoking/vaping materials from your home and car.",
+      "success_criteria": "Clean environment + remove all materials",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 30,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 3,
+      "title": "Day 3: The Replacement",
+      "description": "Finding healthy alternatives to replace the habit.",
+      "challenge_text": "When you feel the urge, chew gum, drink water, or do deep breathing instead.",
+      "success_criteria": "Use replacement techniques + log effectiveness",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 25,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 4,
+      "title": "Day 4: The Support",
+      "description": "Building a support network to help you through the process.",
+      "challenge_text": "Tell 3 people about your decision to quit and ask for their support.",
+      "success_criteria": "Share your goal + establish support network",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 30,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 5,
+      "title": "Day 5: The Triggers",
+      "description": "Identifying and managing your smoking triggers.",
+      "challenge_text": "List your top 5 smoking triggers and create a plan for each one.",
+      "success_criteria": "Identify triggers + create management plan",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 35,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 6,
+      "title": "Day 6: The Routine",
+      "description": "Changing your daily routine to avoid smoking situations.",
+      "challenge_text": "Modify your daily routine to avoid places and times when you usually smoke.",
+      "success_criteria": "Modify routine + avoid smoking situations",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 40,
+      "difficulty": "hard"
+    },
+    {
+      "level_number": 7,
+      "title": "Day 7: The First Week",
+      "description": "Celebrating your first week smoke-free.",
+      "challenge_text": "Reflect on how you feel physically and mentally after one week.",
+      "success_criteria": "Complete reflection + note improvements",
+      "xp_reward": 150,
+      "coin_reward": 75,
+      "estimated_duration_minutes": 25,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 8,
+      "title": "Day 8: The Cravings",
+      "description": "Learning to ride out cravings without giving in.",
+      "challenge_text": "When you have a craving, use the 5-minute rule: wait 5 minutes before deciding.",
+      "success_criteria": "Use 5-minute rule + ride out cravings",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 20,
+      "difficulty": "hard"
+    },
+    {
+      "level_number": 9,
+      "title": "Day 9: The Social",
+      "description": "Navigating social situations without smoking.",
+      "challenge_text": "Attend a social event and practice being around others who smoke without joining them.",
+      "success_criteria": "Navigate social situation + resist temptation",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 60,
+      "difficulty": "hard"
+    },
+    {
+      "level_number": 10,
+      "title": "Day 10: The Milestone",
+      "description": "Reaching your first major milestone in the smoke-free journey.",
+      "challenge_text": "Calculate how much money you've saved and plan how to use it.",
+      "success_criteria": "Calculate savings + plan usage",
+      "xp_reward": 200,
+      "coin_reward": 100,
+      "estimated_duration_minutes": 30,
+      "difficulty": "easy"
+    }
+  ],
+  "social_media": [
+    {
+      "level_number": 1,
+      "title": "Day 1: The Awareness",
+      "description": "Understanding your current social media usage and its impact.",
+      "challenge_text": "Track how much time you spend on social media today and note how you feel after each session.",
+      "success_criteria": "Track usage time + log emotional impact",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 30,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 2,
+      "title": "Day 2: The Boundaries",
+      "description": "Setting clear boundaries for your social media use.",
+      "challenge_text": "Set specific times when you can use social media and stick to them.",
+      "success_criteria": "Set time boundaries + follow them",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 20,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 3,
+      "title": "Day 3: The Removal",
+      "description": "Removing social media apps from your phone to reduce temptation.",
+      "challenge_text": "Delete social media apps from your phone and use only the web version.",
+      "success_criteria": "Remove apps + use web version only",
+      "xp_reward": 100,
+      "coin_reward": 50,
+      "estimated_duration_minutes": 15,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 4,
+      "title": "Day 4: The Alternative",
+      "description": "Finding meaningful activities to replace social media time.",
+      "challenge_text": "Spend the time you would have used on social media doing something productive or enjoyable.",
+      "success_criteria": "Replace social media time + engage in alternative activity",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 45,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 5,
+      "title": "Day 5: The Connection",
+      "description": "Building real-world connections to replace virtual ones.",
+      "challenge_text": "Reach out to a friend or family member in person or by phone instead of social media.",
+      "success_criteria": "Make real connection + avoid social media",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 30,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 6,
+      "title": "Day 6: The Mindfulness",
+      "description": "Practicing mindfulness to reduce the need for constant stimulation.",
+      "challenge_text": "Practice 10 minutes of meditation or mindfulness when you feel the urge to check social media.",
+      "success_criteria": "Practice mindfulness + resist social media urge",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 25,
+      "difficulty": "medium"
+    },
+    {
+      "level_number": 7,
+      "title": "Day 7: The First Week",
+      "description": "Reflecting on your first week with reduced social media usage.",
+      "challenge_text": "Write about how you feel without constant social media access and what you've accomplished.",
+      "success_criteria": "Complete reflection + note accomplishments",
+      "xp_reward": 150,
+      "coin_reward": 75,
+      "estimated_duration_minutes": 30,
+      "difficulty": "easy"
+    },
+    {
+      "level_number": 8,
+      "title": "Day 8: The Focus",
+      "description": "Improving your focus and productivity without social media distractions.",
+      "challenge_text": "Complete a task that requires deep focus without checking social media.",
+      "success_criteria": "Complete focused task + avoid distractions",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 60,
+      "difficulty": "hard"
+    },
+    {
+      "level_number": 9,
+      "title": "Day 9: The Social",
+      "description": "Navigating social situations without relying on social media.",
+      "challenge_text": "Attend a social event and be fully present without posting about it.",
+      "success_criteria": "Attend event + be fully present",
+      "xp_reward": 120,
+      "coin_reward": 60,
+      "estimated_duration_minutes": 90,
+      "difficulty": "hard"
+    },
+    {
+      "level_number": 10,
+      "title": "Day 10: The Milestone",
+      "description": "Celebrating your first major milestone in the social media detox journey.",
+      "challenge_text": "Reflect on how your relationships and productivity have improved.",
+      "success_criteria": "Complete reflection + note improvements",
+      "xp_reward": 200,
+      "coin_reward": 100,
+      "estimated_duration_minutes": 25,
+      "difficulty": "easy"
+    }
+  ]
+}

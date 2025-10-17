@@ -1,8 +1,8 @@
 // src/lib/supabaseClient.ts
 import { createClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL!;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+const url = process.env.SUPABASE_URL!;
+const anonKey = process.env.SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(url, anonKey, {
   // recommended for realtime usage

@@ -1,8 +1,8 @@
 // src/lib/posthogClient.ts
 import posthog from "posthog-js";
 
-const key = import.meta.env.VITE_POSTHOG_KEY;
-const host = import.meta.env.VITE_POSTHOG_HOST || "https://app.posthog.com";
+const key = process.env.POSTHOG_KEY;
+const host = process.env.POSTHOG_HOST || "https://app.posthog.com";
 
 if (key) {
   posthog.init(key, {

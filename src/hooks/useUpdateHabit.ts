@@ -12,8 +12,8 @@ export const useUpdateHabit = (userId: string) => {
     toughness?: string;
     meta?: any;
   }) => {
-    const url = import.meta.env.VITE_UPDATE_HABIT_URL!;
-    if (!url) throw new Error("VITE_UPDATE_HABIT_URL is not set");
+    const url = process.env.UPDATE_HABIT_URL!;
+    if (!url) throw new Error("UPDATE_HABIT_URL is not set");
 
     const event = payload.resisted ? { type: "resist", data: {} } : (payload.relapsed ? { type: "relapse", data: {} } : { type: "manual", data: {} });
 
