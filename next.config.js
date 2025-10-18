@@ -2,10 +2,23 @@
 const nextConfig = {
   images: {
     domains: ['images.unsplash.com', 'via.placeholder.com'],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
   },
-  // TODO: Add PostHog analytics configuration
-  // TODO: Add Supabase configuration
-  // TODO: Add Clerk configuration
+  
+  // External packages that should not be bundled
+  serverExternalPackages: ['@supabase/supabase-js', 'openai'],
+  
+  // Performance optimizations
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+  
+  // Compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
 }
 
-module.exports = nextConfig
+export default nextConfig

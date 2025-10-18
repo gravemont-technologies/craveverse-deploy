@@ -19,6 +19,8 @@ import {
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 
+// Note: Lazy loading components can be implemented when needed
+
 export default function LandingPage() {
   const { isSignedIn, user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
@@ -328,5 +330,6 @@ export default function LandingPage() {
     </div>
   );
 }
+
 
 

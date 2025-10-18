@@ -2,9 +2,18 @@
 import OpenAI from 'openai';
 import { CONFIG, AIModelType } from './config';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization of OpenAI client
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY || 'placeholder-api-key';
+    openai = new OpenAI({
+      apiKey,
+    });
+  }
+  return openai;
+}
 
 // Token counting utility (simplified - in production, use tiktoken)
 function estimateTokens(text: string): number {
@@ -139,7 +148,7 @@ export class OpenAIClient {
 
     try {
       // Make API call
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAIClient().chat.completions.create({
         model,
         messages: [{ role: 'user', content: prompt }],
         max_tokens: maxTokens,

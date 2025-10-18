@@ -2,9 +2,11 @@
   "name": "craveverse",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 5173",
-    "build": "next build",
+    "build": "next build --no-lint",
+    "build:dev": "NODE_ENV=development next build --no-lint",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -15,6 +17,7 @@
     "clean": "powershell -ExecutionPolicy Bypass -File scripts\\clean-environment.ps1",
     "stop-all": "powershell -ExecutionPolicy Bypass -File scripts\\stop-all-vite.ps1",
     "stop-all-bat": "scripts\\stop-all-vite.bat",
+    "auto-cleanup": "powershell -ExecutionPolicy Bypass -File scripts\\auto-cleanup.ps1",
     "setup-env": "scripts\\setup-env.bat"
   },
   "dependencies": {
