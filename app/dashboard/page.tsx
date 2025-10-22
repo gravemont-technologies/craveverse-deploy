@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,13 +49,24 @@ interface Level {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user, isLoaded } = useUser();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchUserData();
-  }, []);
+    if (isLoaded && user) {
+      fetchUserData();
+    } else if (isLoaded && !user) {
+      router.push('/sign-in');
+    }
+  }, [isLoaded, user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserData();
+    }
+  }, [user]);
 
   const fetchUserData = async () => {
     try {
@@ -76,10 +88,24 @@ export default function DashboardPage() {
     fetchUserData();
   };
 
-  if (isLoading) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-crave-orange"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">Please sign in</h1>
+          <p className="text-muted-foreground">You need to be signed in to access the dashboard.</p>
+          <Button onClick={() => router.push('/sign-in')}>
+            Sign In
+          </Button>
+        </div>
       </div>
     );
   }

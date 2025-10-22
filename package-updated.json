@@ -22,7 +22,10 @@
     "permanent-cleanup": "powershell -ExecutionPolicy Bypass -File scripts\\simple-permanent-cleanup.ps1",
     "conflict-prevention": "powershell -ExecutionPolicy Bypass -File scripts\\conflict-prevention.ps1",
     "single-server": "scripts\\single-server-start.bat",
-    "start-clean": "npm run stop-all-bat && npm run dev"
+    "start-clean": "npm run stop-all-bat && npm run dev",
+    "update-deps": "npm update && npm audit fix",
+    "check-updates": "npm outdated",
+    "security-audit": "npm audit"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.5",
@@ -101,5 +104,13 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "postcss": "^8.5.6",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "overrides": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

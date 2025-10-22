@@ -7,7 +7,10 @@ let openai: OpenAI | null = null;
 
 function getOpenAIClient(): OpenAI {
   if (!openai) {
-    const apiKey = process.env.OPENAI_API_KEY || 'placeholder-api-key';
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('Missing OPENAI_API_KEY environment variable. Please check your .env.local file.');
+    }
     openai = new OpenAI({
       apiKey,
     });
