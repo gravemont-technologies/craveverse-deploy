@@ -31,15 +31,37 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Check if we have a valid Clerk publishable key
+  const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const isValidClerkKey = clerkPubKey && 
+    clerkPubKey.startsWith('pk_') && 
+    !clerkPubKey.includes('placeholder') &&
+    clerkPubKey.length > 50; // Real Clerk keys are much longer
+
+  // If we have a valid key, use ClerkProvider for full auth functionality
+  // Otherwise, render without Clerk for build-time compatibility
+  if (isValidClerkKey) {
+    return (
+      <ClerkProvider>
+        <html lang="en">
+          <body className={inter.className}>
+            {children}
+            <Toaster position="top-right" />
+            {/* <PerformanceMonitor /> */}
+          </body>
+        </html>
+      </ClerkProvider>
+    );
+  }
+
+  // Build-time or invalid key: render without Clerk
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={inter.className}>
-          {children}
-          <Toaster position="top-right" />
-          {/* <PerformanceMonitor /> */}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        {children}
+        <Toaster position="top-right" />
+        {/* <PerformanceMonitor /> */}
+      </body>
+    </html>
   );
 }
