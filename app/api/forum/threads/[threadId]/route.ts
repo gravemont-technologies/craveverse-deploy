@@ -77,7 +77,7 @@ export async function GET(
       ai_reply_suggested: thread.ai_reply_suggested,
     };
 
-    const transformedReplies = replies?.map(reply => ({
+    const transformedReplies = replies?.map((reply: any) => ({
       id: reply.id,
       content: reply.content,
       author_name: (reply.users as any)?.name,

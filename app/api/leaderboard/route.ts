@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Process data
-    const battleWins = battleData?.reduce((acc, battle) => {
+    const battleWins = battleData?.reduce((acc: Record<string, number>, battle: any) => {
       if (battle.winner_id === 'user1') {
         acc[battle.user1_id] = (acc[battle.user1_id] || 0) + 1;
       } else if (battle.winner_id === 'user2') {
@@ -73,13 +73,13 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, number>) || {};
 
-    const levelCounts = levelData?.reduce((acc, level) => {
+    const levelCounts = levelData?.reduce((acc: Record<string, number>, level: any) => {
       acc[level.user_id] = (acc[level.user_id] || 0) + 1;
       return acc;
     }, {} as Record<string, number>) || {};
 
     // Transform data for leaderboard
-    const overall = overallData?.map((user, index) => ({
+    const overall = overallData?.map((user: any, index: number) => ({
       rank: index + 1,
       username: user.username,
       avatar: '', // Would need to add avatar field
@@ -93,16 +93,16 @@ export async function GET(request: NextRequest) {
 
     // Get streaks leaderboard
     const streaks = overall
-      .sort((a, b) => b.streak - a.streak)
-      .map((user, index) => ({ ...user, rank: index + 1 }));
+      .sort((a: any, b: any) => b.streak - a.streak)
+      .map((user: any, index: number) => ({ ...user, rank: index + 1 }));
 
     // Get battles leaderboard
     const battles = overall
-      .sort((a, b) => b.battles_won - a.battles_won)
-      .map((user, index) => ({ ...user, rank: index + 1 }));
+      .sort((a: any, b: any) => b.battles_won - a.battles_won)
+      .map((user: any, index: number) => ({ ...user, rank: index + 1 }));
 
     // Group by craving type
-    const byCraving = overall.reduce((acc, user) => {
+    const byCraving = overall.reduce((acc: Record<string, any[]>, user: any) => {
       const craving = user.craving_type;
       if (!acc[craving]) {
         acc[craving] = [];
@@ -114,8 +114,8 @@ export async function GET(request: NextRequest) {
     // Sort each craving group by XP
     Object.keys(byCraving).forEach(craving => {
       byCraving[craving] = byCraving[craving]
-        .sort((a, b) => b.xp - a.xp)
-        .map((user, index) => ({ ...user, rank: index + 1 }));
+        .sort((a: any, b: any) => b.xp - a.xp)
+        .map((user: any, index: number) => ({ ...user, rank: index + 1 }));
     });
 
     const leaderboard = {

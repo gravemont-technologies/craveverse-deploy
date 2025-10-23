@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     let tempStreak = 0;
 
     // Sort battles by creation date (oldest first) to calculate streaks correctly
-    const sortedBattles = battles?.sort((a, b) => 
+    const sortedBattles = battles?.sort((a: any, b: any) => 
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     ) || [];
 

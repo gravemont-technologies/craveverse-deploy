@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data for frontend
-    const transformedThreads = threads?.map(thread => ({
+    const transformedThreads = threads?.map((thread: any) => ({
       id: thread.id,
       title: thread.title,
       content: thread.content,

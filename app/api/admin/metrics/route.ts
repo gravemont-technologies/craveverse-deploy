@@ -84,10 +84,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const totalRevenue = revenueData?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
-    const monthlyRevenue = revenueData?.filter(transaction => 
+    const totalRevenue = revenueData?.reduce((sum: number, transaction: any) => sum + transaction.amount, 0) || 0;
+    const monthlyRevenue = revenueData?.filter((transaction: any) => 
       new Date(transaction.created_at) >= startDate
-    ).reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
+    ).reduce((sum: number, transaction: any) => sum + transaction.amount, 0) || 0;
 
     // Get AI costs
     const { data: aiUsageData, error: aiUsageError } = await supabaseServer
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const aiCosts = aiUsageData?.reduce((sum, usage) => sum + usage.cost_usd, 0) || 0;
+    const aiCosts = aiUsageData?.reduce((sum: number, usage: any) => sum + usage.cost_usd, 0) || 0;
     const aiCostPerUser = (totalUsers && totalUsers > 0) ? aiCosts / totalUsers : 0;
 
     // Get user tier distribution
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const tierCounts = userTiersData?.reduce((acc, user) => {
+    const tierCounts = userTiersData?.reduce((acc: Record<string, number>, user: any) => {
       const tier = user.plan_id || 'free';
       acc[tier] = (acc[tier] || 0) + 1;
       return acc;
@@ -128,8 +128,8 @@ export async function GET(request: NextRequest) {
 
     const userTiers = Object.entries(tierCounts).map(([tier, count]) => ({
       tier,
-      count,
-      percentage: (totalUsers && totalUsers > 0) ? Math.round((count / totalUsers) * 100) : 0,
+      count: count as number,
+      percentage: (totalUsers && totalUsers > 0) ? Math.round(((count as number) / totalUsers) * 100) : 0,
     }));
 
     // Get top AI features
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const featureCounts = topFeaturesData?.reduce((acc, usage) => {
+    const featureCounts = topFeaturesData?.reduce((acc: Record<string, number>, usage: any) => {
       const feature = usage.feature || 'unknown';
       acc[feature] = (acc[feature] || 0) + 1;
       return acc;
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
 
     const topFeatures = Object.entries(featureCounts)
       .map(([name, usage]) => ({ name, usage }))
-      .sort((a, b) => b.usage - a.usage)
+      .sort((a: any, b: any) => b.usage - a.usage)
       .slice(0, 5);
 
     // Get recent activity
@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const recentActivity = recentActivityData?.map(activity => ({
+    const recentActivity = recentActivityData?.map((activity: any) => ({
       action: activity.action.replace('_', ' '),
       user: (activity.users as any)?.name,
       timestamp: new Date(activity.created_at).toLocaleDateString(),
