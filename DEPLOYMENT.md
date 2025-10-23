@@ -1,487 +1,335 @@
-# CraveVerse Deployment Guide
+# CraveVerse Vercel Deployment Guide
 
-This guide covers deploying CraveVerse to various platforms and environments.
+This guide covers deploying CraveVerse to Vercel with production-ready configuration.
 
-## 🚀 Quick Deploy to Vercel (Recommended)
+## 🚀 Quick Deploy to Vercel
 
-### Option 1: Deploy from GitHub
+### Step 1: Prepare Your Repository
 
-1. **Push your code to GitHub:**
+1. **Ensure your code is ready:**
    ```bash
    git add .
-   git commit -m "Initial commit"
+   git commit -m "Ready for Vercel deployment"
    git push origin main
    ```
 
-2. **Deploy to Vercel:**
-   - Go to [vercel.com](https://vercel.com)
-   - Sign up with GitHub
-   - Click "New Project"
-   - Import your GitHub repository
-   - Vercel will automatically detect it's a Next.js project
-   - Add your environment variables
-   - Click "Deploy"
-
-### Option 2: Deploy with Vercel CLI
-
-1. **Install Vercel CLI:**
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Login to Vercel:**
-   ```bash
-   vercel login
-   ```
-
-3. **Deploy:**
-   ```bash
-   vercel
-   ```
-
-4. **Set environment variables:**
-   ```bash
-   vercel env add NEXT_PUBLIC_SUPABASE_URL
-   vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
-   vercel env add SUPABASE_SERVICE_ROLE_KEY
-   vercel env add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-   vercel env add CLERK_SECRET_KEY
-   vercel env add NEXT_PUBLIC_POSTHOG_KEY
-   vercel env add NEXT_PUBLIC_POSTHOG_HOST
-   ```
-
-## 🌐 Other Deployment Platforms
-
-### Netlify
-
-1. **Build the project:**
+2. **Verify build works locally:**
    ```bash
    npm run build
+   npm run start
    ```
 
-2. **Deploy to Netlify:**
-   - Go to [netlify.com](https://netlify.com)
-   - Drag and drop your `.next` folder
-   - Or connect your GitHub repository
-   - Set build command: `npm run build`
-   - Set publish directory: `.next`
-   - Add environment variables in Netlify dashboard
+### Step 2: Deploy to Vercel
 
-### AWS Amplify
+1. **Go to [vercel.com](https://vercel.com)**
+2. **Sign up/Login with GitHub**
+3. **Click "New Project"**
+4. **Import your GitHub repository**
+5. **Vercel will auto-detect Next.js**
+6. **Click "Deploy"**
 
-1. **Connect GitHub repository:**
-   - Go to [aws.amazon.com/amplify](https://aws.amazon.com/amplify)
-   - Click "New app" → "Host web app"
-   - Connect your GitHub repository
-   - Select the main branch
+### Step 3: Configure Environment Variables
 
-2. **Configure build settings:**
-   ```yaml
-   version: 1
-   frontend:
-     phases:
-       preBuild:
-         commands:
-           - npm ci
-       build:
-         commands:
-           - npm run build
-     artifacts:
-       baseDirectory: .next
-       files:
-         - '**/*'
-     cache:
-       paths:
-         - node_modules/**/*
-         - .next/cache/**/*
-   ```
-
-3. **Add environment variables:**
-   - Go to "Environment variables" in Amplify console
-   - Add all required environment variables
-
-### Railway
-
-1. **Install Railway CLI:**
-   ```bash
-   npm install -g @railway/cli
-   ```
-
-2. **Login and deploy:**
-   ```bash
-   railway login
-   railway init
-   railway up
-   ```
-
-3. **Set environment variables:**
-   ```bash
-   railway variables set NEXT_PUBLIC_SUPABASE_URL=your-url
-   railway variables set NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
-   # ... add all other variables
-   ```
-
-### DigitalOcean App Platform
-
-1. **Create a new app:**
-   - Go to [cloud.digitalocean.com/apps](https://cloud.digitalocean.com/apps)
-   - Click "Create App"
-   - Connect your GitHub repository
-
-2. **Configure the app:**
-   - Set build command: `npm run build`
-   - Set run command: `npm start`
-   - Set source directory: `/`
-   - Set output directory: `.next`
-
-3. **Add environment variables:**
-   - Go to "Settings" → "Environment Variables"
-   - Add all required variables
-
-## 🐳 Docker Deployment
-
-### Create Dockerfile
-
-```dockerfile
-# Use the official Node.js image
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --only=production
-
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Production image
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-
-CMD ["node", "server.js"]
-```
-
-### Build and run with Docker
-
-```bash
-# Build the Docker image
-docker build -t craveverse .
-
-# Run the container
-docker run -p 3000:3000 \
-  -e NEXT_PUBLIC_SUPABASE_URL=your-url \
-  -e NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key \
-  -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your-key \
-  -e CLERK_SECRET_KEY=your-secret \
-  craveverse
-```
-
-## 🔧 Environment Configuration
-
-### Required Environment Variables
+In your Vercel dashboard → Settings → Environment Variables, add:
 
 ```env
-# Supabase
-SUPABASE_URL=your-supabase-url
-SUPABASE_ANON_KEY=your-supabase-anon-key
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
-# Clerk
-CLERK_PUBLISHABLE_KEY=pk_live_your-publishable-key
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_your-publishable-key
 CLERK_SECRET_KEY=sk_live_your-secret-key
 
-# PostHog (Optional)
-POSTHOG_KEY=phc_your-posthog-key
-POSTHOG_HOST=https://app.posthog.com
+# OpenAI
+OPENAI_API_KEY=sk-your-openai-api-key
 
-# Application
-APP_URL=https://your-domain.com
-APP_NAME=CraveVerse
+# Stripe
+STRIPE_PUBLISHABLE_KEY=pk_live_your-stripe-publishable-key
+STRIPE_SECRET_KEY=sk_live_your-stripe-secret-key
+STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
+
+# PostHog Analytics
+NEXT_PUBLIC_POSTHOG_KEY=phc_your-posthog-key
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+
+# Application Configuration
+NEXT_PUBLIC_APP_URL=https://your-app-name.vercel.app
+NODE_ENV=production
 ```
 
-### Production vs Development
+### Step 4: Configure Webhooks
 
-**Development:**
-- Use `pk_test_` keys for Clerk
-- Use `sk_test_` keys for Clerk
-- Use development Supabase project
-- Use development PostHog project
+**After getting your Vercel URL, configure webhooks:**
 
-**Production:**
-- Use `pk_live_` keys for Clerk
-- Use `sk_live_` keys for Clerk
-- Use production Supabase project
-- Use production PostHog project
+#### Clerk Webhook
+- **URL**: `https://your-app-name.vercel.app/api/webhooks/clerk`
+- **Events**: `user.created`, `user.updated`, `user.deleted`
+- **Secret**: Use a strong secret key
 
-## 🗄️ Database Setup for Production
+#### Stripe Webhook
+- **URL**: `https://your-app-name.vercel.app/api/stripe/webhook`
+- **Events**: 
+  - `checkout.session.completed`
+  - `customer.subscription.created`
+  - `customer.subscription.updated`
+  - `customer.subscription.deleted`
+  - `invoice.payment_succeeded`
+  - `invoice.payment_failed`
 
-### Supabase Production Setup
+## 🔧 Production Setup
 
-1. **Create Production Project:**
+### Database Configuration
+
+1. **Create Production Supabase Project:**
    - Go to [supabase.com](https://supabase.com)
-   - Create a new project for production
-   - Choose a region close to your users
-   - Set a strong database password
+   - Create new project for production
+   - Choose region closest to your users
+   - Set strong database password
 
 2. **Run Production Schema:**
-   - Copy the contents of `database/schema.sql`
-   - Run it in your production Supabase project
-   - Verify all tables and policies are created
+   ```sql
+   -- Copy and run the contents of database/complete-schema.sql
+   -- This includes all tables, relationships, and RLS policies
+   ```
 
 3. **Configure Storage:**
-   - Ensure the `files` bucket is created
-   - Set appropriate storage policies
-   - Configure file size limits
+   - Create `files` bucket for user uploads
+   - Set appropriate file size limits
+   - Configure storage policies
 
-4. **Set Up Backups:**
-   - Enable automatic backups
-   - Set up point-in-time recovery
-   - Configure backup retention
+### Authentication Setup
 
-### Clerk Production Setup
-
-1. **Create Production Application:**
+1. **Create Production Clerk Application:**
    - Go to [clerk.com](https://clerk.com)
-   - Create a new application for production
+   - Create new application for production
    - Configure production domains
+   - Set up OAuth providers
 
-2. **Set Up Authentication:**
-   - Configure OAuth providers
-   - Set up email templates
-   - Configure session settings
+2. **Configure Webhooks:**
+   - Add webhook endpoint for user events
+   - Test webhook delivery
+   - Set up retry policies
 
-3. **Security Settings:**
-   - Enable rate limiting
-   - Configure session timeouts
-   - Set up security policies
+### Payment Setup
 
-## 📊 Monitoring and Analytics
+1. **Create Production Stripe Account:**
+   - Go to [stripe.com](https://stripe.com)
+   - Switch to live mode
+   - Get live API keys
+   - Configure webhooks
 
-### PostHog Production Setup
+2. **Set Up Products:**
+   - Create subscription products
+   - Configure pricing tiers
+   - Set up tax rates
 
-1. **Create Production Project:**
-   - Go to [posthog.com](https://posthog.com)
-   - Create a new project for production
+### AI Configuration
+
+1. **OpenAI Setup:**
+   - Get production API key
+   - Set usage limits
+   - Configure monitoring
+   - Set up cost alerts
+
+2. **Cost Controls:**
+   - Set monthly budget limits
+   - Configure per-user limits
+   - Set up fallback templates
+
+## 📊 Monitoring & Health Checks
+
+### Health Check Endpoint
+
+The application includes a health check at `/api/health` that verifies:
+- Database connectivity
+- External service status
+- System health metrics
+
+### Monitoring Setup
+
+1. **PostHog Production:**
+   - Create production project
    - Configure data retention
+   - Set up alerts and dashboards
 
-2. **Set Up Monitoring:**
-   - Configure alerts
-   - Set up dashboards
-   - Monitor key metrics
+2. **Error Monitoring:**
+   - Consider adding Sentry for error tracking
+   - Set up log aggregation
+   - Configure alerting
 
-### Error Monitoring
+## 🔒 Security Configuration
 
-Consider adding error monitoring:
+### Environment Security
 
-```bash
-# Install Sentry
-npm install @sentry/nextjs
-```
-
-```javascript
-// sentry.client.config.js
-import * as Sentry from '@sentry/nextjs';
-
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  tracesSampleRate: 1.0,
-});
-```
-
-## 🔒 Security Considerations
-
-### Environment Variables
-- Never commit `.env.local` or `.env.production`
-- Use different keys for development and production
-- Rotate keys regularly
-- Use secure key management
+- **Never commit `.env` files**
+- **Use different keys for dev/prod**
+- **Rotate keys regularly**
+- **Use secure key management**
 
 ### Database Security
-- Enable Row Level Security (RLS)
-- Use strong database passwords
-- Configure IP restrictions
-- Set up database backups
 
-### Authentication Security
-- Use strong session secrets
-- Configure session timeouts
-- Enable rate limiting
-- Set up security policies
+- **Enable Row Level Security (RLS)**
+- **Use strong database passwords**
+- **Configure IP restrictions**
+- **Set up automated backups**
+
+### Application Security
+
+- **Enable rate limiting**
+- **Configure CORS properly**
+- **Set up security headers**
+- **Monitor for suspicious activity**
 
 ## 🚀 Performance Optimization
 
+### Vercel Configuration
+
+The project includes `vercel.json` with:
+- Optimized build settings
+- Function timeout configuration
+- Edge caching configuration
+
 ### Next.js Optimizations
 
-1. **Enable Image Optimization:**
-   ```javascript
-   // next.config.js
-   module.exports = {
-     images: {
-       domains: ['your-domain.com'],
-     },
-   };
-   ```
+- **Image optimization** enabled
+- **Static generation** where possible
+- **API route optimization**
+- **Bundle size optimization**
 
-2. **Enable Compression:**
-   ```javascript
-   // next.config.js
-   module.exports = {
-     compress: true,
-   };
-   ```
+### Database Optimization
 
-3. **Configure Caching:**
-   ```javascript
-   // next.config.js
-   module.exports = {
-     async headers() {
-       return [
-         {
-           source: '/(.*)',
-           headers: [
-             {
-               key: 'Cache-Control',
-               value: 'public, max-age=31536000, immutable',
-             },
-           ],
-         },
-       ];
-     },
-   };
-   ```
+- **Connection pooling**
+- **Query optimization**
+- **Indexing strategy**
+- **Caching layer**
 
-### CDN Configuration
+## 🔄 CI/CD Pipeline
 
-- Use a CDN for static assets
-- Configure proper cache headers
-- Enable gzip compression
-- Set up image optimization
+### Automatic Deployments
+
+Vercel automatically deploys on:
+- Push to `main` branch
+- Pull request creation
+- Manual deployment triggers
+
+### Pre-deployment Checks
+
+- **Build verification**
+- **Type checking**
+- **Linting**
+- **Test execution** (if configured)
 
 ## 📈 Scaling Considerations
 
 ### Database Scaling
-- Monitor database performance
-- Set up read replicas
-- Configure connection pooling
-- Plan for data archiving
+
+- **Monitor query performance**
+- **Set up read replicas**
+- **Configure connection pooling**
+- **Plan for data archiving**
 
 ### Application Scaling
-- Use horizontal scaling
-- Configure load balancing
-- Set up auto-scaling
-- Monitor resource usage
 
-### File Storage Scaling
-- Use CDN for file delivery
-- Implement file compression
-- Set up automatic cleanup
-- Monitor storage usage
+- **Monitor function execution**
+- **Set up auto-scaling**
+- **Configure load balancing**
+- **Monitor resource usage**
 
-## 🔄 CI/CD Pipeline
+### Cost Management
 
-### GitHub Actions Example
-
-```yaml
-# .github/workflows/deploy.yml
-name: Deploy to Production
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Run tests
-        run: npm test
-      
-      - name: Build application
-        run: npm run build
-      
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID }}
-          vercel-project-id: ${{ secrets.PROJECT_ID }}
-          vercel-args: '--prod'
-```
+- **Monitor AI usage costs**
+- **Set up budget alerts**
+- **Optimize function execution**
+- **Review subscription tiers**
 
 ## 🆘 Troubleshooting
 
 ### Common Issues
 
 1. **Build Failures:**
-   - Check Node.js version
-   - Clear cache and reinstall
-   - Verify environment variables
+   - Check Node.js version compatibility
+   - Verify all dependencies are installed
+   - Check for TypeScript errors
+   - Review environment variables
 
 2. **Database Connection Issues:**
-   - Check Supabase URL and keys
-   - Verify database is accessible
+   - Verify Supabase URL and keys
    - Check RLS policies
+   - Verify network connectivity
+   - Review connection limits
 
 3. **Authentication Issues:**
-   - Verify Clerk keys
+   - Verify Clerk keys and configuration
    - Check redirect URLs
-   - Verify domain configuration
+   - Verify webhook configuration
+   - Review user permissions
 
-4. **Performance Issues:**
-   - Monitor database queries
-   - Check CDN configuration
-   - Optimize images and assets
+4. **Payment Issues:**
+   - Verify Stripe keys and webhooks
+   - Check product configuration
+   - Review webhook event handling
+   - Test payment flows
+
+### Debugging Steps
+
+1. **Check Vercel Function Logs:**
+   - Go to Vercel dashboard
+   - Navigate to Functions tab
+   - Review execution logs
+   - Check error messages
+
+2. **Verify Environment Variables:**
+   - Check all required variables are set
+   - Verify values are correct
+   - Test with different environments
+
+3. **Test API Endpoints:**
+   - Use health check endpoint
+   - Test individual API routes
+   - Verify database connectivity
+   - Check external service integration
 
 ### Getting Help
 
-- Check the application logs
-- Monitor error tracking
-- Review performance metrics
-- Contact support if needed
+- **Check Vercel documentation**
+- **Review Next.js deployment guide**
+- **Check service-specific documentation**
+- **Contact support if needed**
+
+## 📋 Post-Deployment Checklist
+
+- [ ] Application loads successfully
+- [ ] Authentication works (sign up/sign in)
+- [ ] Database operations work
+- [ ] Payment processing works
+- [ ] AI features function correctly
+- [ ] Webhooks are configured and working
+- [ ] Health check endpoint responds
+- [ ] Monitoring is set up
+- [ ] Error tracking is configured
+- [ ] Performance is acceptable
+- [ ] Security measures are in place
+
+## 🔄 Rollback Procedures
+
+### Quick Rollback
+
+1. **Go to Vercel dashboard**
+2. **Navigate to Deployments**
+3. **Select previous working deployment**
+4. **Click "Promote to Production"**
+
+### Database Rollback
+
+1. **Use Supabase point-in-time recovery**
+2. **Restore from backup**
+3. **Verify data integrity**
+4. **Test application functionality**
 
 ---
 
 Happy deploying! 🚀
+
+For additional support, check the [README.md](README.md) or create an issue in the repository.

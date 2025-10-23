@@ -4,25 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev -p 5173",
-    "build": "next build --no-lint",
-    "build:dev": "NODE_ENV=development next build --no-lint",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "setup": "node scripts/setup.js",
     "setup:windows": "scripts\\setup.bat",
     "setup:unix": "./scripts/setup.sh",
-    "setup:powershell": "powershell -ExecutionPolicy Bypass -File scripts\\setup.ps1",
-    "clean": "powershell -ExecutionPolicy Bypass -File scripts\\clean-environment.ps1",
-    "stop-all": "powershell -ExecutionPolicy Bypass -File scripts\\stop-all-vite.ps1",
-    "stop-all-bat": "scripts\\stop-all-vite.bat",
-    "auto-cleanup": "powershell -ExecutionPolicy Bypass -File scripts\\auto-cleanup.ps1",
-    "setup-env": "scripts\\setup-env.bat",
-    "permanent-cleanup": "powershell -ExecutionPolicy Bypass -File scripts\\simple-permanent-cleanup.ps1",
-    "conflict-prevention": "powershell -ExecutionPolicy Bypass -File scripts\\conflict-prevention.ps1",
-    "single-server": "scripts\\single-server-start.bat",
-    "start-clean": "npm run stop-all-bat && npm run dev"
+    "setup:powershell": "powershell -ExecutionPolicy Bypass -File scripts\\setup.ps1"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.5",
