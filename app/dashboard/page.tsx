@@ -73,14 +73,26 @@ export default function DashboardPage() {
 
   const fetchUserData = async () => {
     try {
+      console.log('Dashboard: Starting to fetch user data...');
+      
+      // First, check debug endpoint
+      const debugResponse = await fetch('/api/debug/user-state');
+      const debugData = await debugResponse.json();
+      console.log('Dashboard: Debug user state:', debugData);
+      
       const response = await fetch('/api/user/profile');
+      console.log('Dashboard: Profile API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Dashboard: Profile API data:', data);
         setUserProfile(data.user);
         setCurrentLevel(data.currentLevel);
+      } else {
+        console.error('Dashboard: Profile API failed:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Dashboard: Error fetching user data:', error);
     } finally {
       setIsLoading(false);
     }

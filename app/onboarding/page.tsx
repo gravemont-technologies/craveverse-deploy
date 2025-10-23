@@ -108,6 +108,10 @@ export default function OnboardingPage() {
     setIsLoading(true);
 
     try {
+      console.log('Onboarding: Starting completion process...');
+      console.log('Onboarding: Selected craving:', onboardingData.selectedCraving);
+      console.log('Onboarding: Personalization data:', onboardingData.personalization);
+
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: {
@@ -120,15 +124,29 @@ export default function OnboardingPage() {
         }),
       });
 
+      console.log('Onboarding: API response status:', response.status);
+
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Onboarding: API error response:', errorData);
         throw new Error('Failed to complete onboarding');
       }
 
+      const result = await response.json();
+      console.log('Onboarding: Completion successful:', result);
+
+      // Check user state after completion
+      const debugResponse = await fetch('/api/debug/user-state');
+      const debugData = await debugResponse.json();
+      console.log('Onboarding: User state after completion:', debugData);
+
       // Redirect to dashboard
+      console.log('Onboarding: Redirecting to dashboard...');
       router.push('/dashboard');
     } catch (error) {
       console.error('Onboarding completion error:', error);
       // Still redirect to dashboard
+      console.log('Onboarding: Error occurred, still redirecting to dashboard...');
       router.push('/dashboard');
     } finally {
       setIsLoading(false);
