@@ -60,6 +60,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Ensure userProfile exists after fallback creation
+    if (!userProfile) {
+      console.error('Failed to create or retrieve user profile');
+      return NextResponse.json({ error: 'User profile not available' }, { status: 500 });
+    }
+
     // Create OpenAI client
     const openai = createOpenAIClient(userId, userProfile.subscription_tier as 'free' | 'plus' | 'ultra');
 
