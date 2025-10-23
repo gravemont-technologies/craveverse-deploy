@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     // If user doesn't exist, create them (fallback for webhook failure)
-    if (userError && userError.code === 'PGRST116') {
+    if (userError && (userError.code === 'PGRST116' || userError.message?.includes('No rows found'))) {
       console.log(`User not found, creating fallback user for: ${userId}`);
       
       const { data: newUser, error: createError } = await supabaseServer

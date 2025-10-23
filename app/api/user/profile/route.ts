@@ -15,10 +15,41 @@ export async function GET(request: NextRequest) {
     console.log(`Fetching profile for user: ${userId}`);
 
     // Get user profile
-    const userProfile = await getCurrentUserProfile();
+    let userProfile = await getCurrentUserProfile();
+    
+    // If user doesn't exist, create them (fallback for webhook failure)
     if (!userProfile) {
-      console.log(`No user profile found for: ${userId}`);
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      console.log(`No user profile found for: ${userId}, creating fallback user`);
+      
+      try {
+        const { data: newUser, error: createError } = await supabaseServer
+          .from('users')
+          .insert({
+            clerk_user_id: userId,
+            email: '', // Will be updated by Clerk webhook later
+            name: 'New User',
+            avatar_url: null,
+            subscription_tier: 'free',
+            xp: 0,
+            cravecoins: 0,
+            streak_count: 0,
+            current_level: 1,
+            primary_craving: null,
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating fallback user:', createError);
+          return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+        }
+
+        userProfile = newUser;
+        console.log(`Fallback user created: ${newUser.id}`);
+      } catch (error) {
+        console.error('Error in fallback user creation:', error);
+        return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+      }
     }
 
     console.log(`User profile found: ${userProfile.id}, primary_craving: ${userProfile.primary_craving}`);

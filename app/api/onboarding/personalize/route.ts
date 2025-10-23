@@ -22,9 +22,42 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user profile to determine tier
-    const userProfile = await getCurrentUserProfile();
+    let userProfile = await getCurrentUserProfile();
+    
+    // If user doesn't exist, create them (fallback for webhook failure)
     if (!userProfile) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      console.log(`No user profile found for personalization: ${userId}, creating fallback user`);
+      
+      try {
+        const { supabaseServer } = await import('../../../../lib/supabase-client');
+        const { data: newUser, error: createError } = await supabaseServer
+          .from('users')
+          .insert({
+            clerk_user_id: userId,
+            email: '', // Will be updated by Clerk webhook later
+            name: 'New User',
+            avatar_url: null,
+            subscription_tier: 'free',
+            xp: 0,
+            cravecoins: 0,
+            streak_count: 0,
+            current_level: 1,
+            primary_craving: null,
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating fallback user for personalization:', createError);
+          return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+        }
+
+        userProfile = newUser;
+        console.log(`Fallback user created for personalization: ${newUser.id}`);
+      } catch (error) {
+        console.error('Error in fallback user creation for personalization:', error);
+        return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+      }
     }
 
     // Create OpenAI client
