@@ -114,6 +114,23 @@ export default function DashboardPage() {
   }
 
   if (!userProfile) {
+    console.log('Dashboard: No user profile found, redirecting to onboarding');
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold">Welcome to CraveVerse</h1>
+          <p className="text-muted-foreground">Please complete your onboarding first.</p>
+          <Button onClick={() => router.push('/onboarding')}>
+            Start Onboarding
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if onboarding is completed (has primary_craving)
+  if (!userProfile.primary_craving) {
+    console.log('Dashboard: User profile exists but no primary_craving, redirecting to onboarding');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">

@@ -49,8 +49,10 @@ export async function POST(req: Request) {
     const { id, email_addresses, first_name, last_name, image_url } = evt.data;
     
     try {
+      console.log(`Creating user profile for Clerk user: ${id}`);
+      
       // Create user profile in Supabase
-      const { error } = await supabaseServer
+      const { data, error } = await supabaseServer
         .from('users')
         .insert({
           clerk_user_id: id,
@@ -62,21 +64,25 @@ export async function POST(req: Request) {
           cravecoins: 0,
           streak_count: 0,
           current_level: 1,
-        });
+          primary_craving: null, // Explicitly set to null for onboarding check
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error creating user profile:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         return new Response('Error creating user profile', {
           status: 500,
         });
       }
 
-      console.log(`User profile created for ${id}`);
+      console.log(`User profile created successfully for ${id}:`, data.id);
     } catch (error) {
       console.error('Error in user.created webhook:', error);
       return new Response('Error processing webhook', {
         status: 500,
-    });
+      });
     }
   }
 

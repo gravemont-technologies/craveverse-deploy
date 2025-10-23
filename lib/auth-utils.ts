@@ -33,8 +33,11 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     const { userId } = await auth();
     
     if (!userId) {
+      console.log('getCurrentUserProfile: No userId from auth');
       return null;
     }
+
+    console.log(`getCurrentUserProfile: Looking for user with clerk_user_id: ${userId}`);
 
     const { data, error } = await supabase
       .from('users')
@@ -44,9 +47,11 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
 
     if (error) {
       console.error('Error fetching user profile:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return null;
     }
 
+    console.log(`getCurrentUserProfile: Found user ${data.id} with primary_craving: ${data.primary_craving}`);
     return data;
   } catch (error) {
     console.error('Error in getCurrentUserProfile:', error);
@@ -101,6 +106,8 @@ export async function updateUserProfile(
 // Check if user has completed onboarding
 export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
   try {
+    console.log(`hasCompletedOnboarding: Checking onboarding status for user: ${userId}`);
+    
     const { data, error } = await supabase
       .from('users')
       .select('primary_craving')
@@ -109,10 +116,13 @@ export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
 
     if (error) {
       console.error('Error checking onboarding status:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return false;
     }
 
-    return !!data.primary_craving;
+    const hasCompleted = !!data.primary_craving;
+    console.log(`hasCompletedOnboarding: User ${userId} onboarding status: ${hasCompleted} (primary_craving: ${data.primary_craving})`);
+    return hasCompleted;
   } catch (error) {
     console.error('Error in hasCompletedOnboarding:', error);
     return false;

@@ -1,291 +1,168 @@
-<!-- 648204ee-b8d4-41b2-b623-313954ee14de 3ec9d59e-0406-4a7b-942f-c09a216e504a -->
-# Local Testing & Debugging Plan
+<!-- 648204ee-b8d4-41b2-b623-313954ee14de afe32015-fc8f-45c3-85c5-50cf6a2f4df5 -->
+# Fix Onboarding Loop Bug
 
-## 1. Environment Setup & Validation
+## Problem Analysis
 
-**Check existing environment files:**
+**Symptoms:**
 
-- Read `.env` and `.env.local` to see what credentials are available
-- Verify all required environment variables are present
-- Test database connectivity with existing credentials
+- User completes onboarding successfully
+- Clicks "Start My Journey" button
+- Redirected back to onboarding screen
+- Dashboard shows "Please complete your onboarding first"
+- Infinite loop between onboarding completion and dashboard
 
-**If credentials missing:**
+**Root Causes Identified:**
 
-- User needs to provide actual Supabase, Clerk, OpenAI, Stripe credentials
-- Or we proceed with mock/placeholder mode for testing UI only
+1. User record may not exist in Supabase `users` table
+2. Clerk webhook might not be creating users automatically
+3. `clerk_user_id` field mismatch between Clerk and database
+4. `primary_craving` field not being properly set or retrieved
+5. Dashboard validation checking wrong field or timing issue
 
-## 2. Fix Build Issues
+## Implementation Steps
 
-**Resolve Supabase client initialization:**
+### Phase 1: Database Verification
 
-- Fix the circular dependency in `lib/supabase-client.ts`
-- Ensure mock client works properly when credentials are missing
-- Make build succeed without requiring live credentials
+**Files:** Supabase Dashboard, `database/craveverse-schema.sql`
 
-**Fix empty sign-in/sign-up pages:**
+1. **Check Supabase `users` table structure**
 
-- Already fixed, but verify they work
+- Verify `clerk_user_id` column exists
+- Verify `primary_craving` column exists
+- Check for any users created during sign-up
 
-## 3. Start Development Server
+2. **Verify Clerk webhook is configured**
 
-**Run local server:**
+- Check `app/api/webhooks/clerk/route.ts`
+- Ensure webhook creates user on `user.created` event
+- Verify webhook URL is configured in Clerk dashboard
 
-```bash
-npm run dev
-```
+### Phase 2: Fix Clerk Webhook User Creation
 
-**Verify server starts:**
+**Files:** `app/api/webhooks/clerk/route.ts`
 
-- Check for any startup errors
-- Confirm port 3000 is accessible
-- Test landing page loads
+1. **Ensure user is created on sign-up**
 
-## 4. Systematic Frontend Testing Strategy
+- Handle `user.created` event
+- Insert user with `clerk_user_id` = Clerk's `userId`
+- Set default values for required fields
+- Add error handling and logging
 
-### Phase A: Public Pages (No Auth Required)
+2. **Add fallback user creation**
 
-**Landing Page (`/`):**
+- If webhook fails, create user on first API call
+- Implement "get or create" pattern in profile routes
 
-- [ ] Page loads without errors
-- [ ] All sections render correctly
-- [ ] Navigation links work
-- [ ] CTA buttons respond
+### Phase 3: Fix Onboarding Completion Flow
 
-**Pricing Page (`/pricing`):**
+**Files:** `app/api/onboarding/complete/route.ts`, `lib/auth-utils.ts`
 
-- [ ] All tiers display correctly
-- [ ] Pricing information accurate
-- [ ] Subscribe buttons work (redirect to sign-up)
+1. **Add user creation fallback in onboarding API**
 
-### Phase B: Authentication Flow
+- Check if user exists by `clerk_user_id`
+- If not exists, create user before updating
+- Ensure `primary_craving` is properly set
+- Add comprehensive error logging
 
-**Sign Up (`/sign-up`):**
+2. **Fix `hasCompletedOnboarding` check**
 
-- [ ] Clerk sign-up component loads
-- [ ] Can create test account
-- [ ] Redirects after successful sign-up
+- Ensure it checks for actual data, not just field existence
+- Add null/undefined safety checks
+- Return proper boolean status
 
-**Sign In (`/sign-in`):**
+### Phase 4: Fix Dashboard Validation
 
-- [ ] Clerk sign-in component loads
-- [ ] Can sign in with test account
-- [ ] Redirects to dashboard after login
+**Files:** `app/dashboard/page.tsx`, `app/api/user/profile/route.ts`
 
-### Phase C: Onboarding Flow
+1. **Improve dashboard onboarding check**
 
-**Onboarding (`/onboarding`):**
+- Add explicit `primary_craving` validation
+- Handle edge cases (null, empty string, undefined)
+- Add loading states between checks
 
-- [ ] Craving selector displays
-- [ ] Can select craving type
-- [ ] Quiz questions load
-- [ ] Can submit answers
-- [ ] API: `POST /api/onboarding/complete` works
-- [ ] API: `POST /api/onboarding/personalize` works
-- [ ] Redirects to dashboard after completion
+2. **Fix profile API response**
 
-### Phase D: Dashboard & Core Features
+- Ensure `primary_craving` is included in response
+- Handle cases where user exists but onboarding incomplete
+- Return clear status indicators
 
-**Dashboard (`/dashboard`):**
+### Phase 5: Add Debugging & Logging
 
-- [ ] User stats display correctly
-- [ ] Recent activity loads
-- [ ] Quick actions work
-- [ ] Trial banner shows (if applicable)
-- [ ] API: `GET /api/user/profile` works
+**Files:** All affected route files
 
-**Levels System:**
+1. **Add console logging**
 
-- [ ] Level cards display
-- [ ] Can click to view level details
-- [ ] Can complete a level
-- [ ] API: `POST /api/levels/complete` works
-- [ ] XP and coins update correctly
+- Log user creation events
+- Log onboarding completion steps
+- Log dashboard validation checks
+- Log database query results
 
-### Phase E: Battle System
+2. **Add error boundaries**
 
-**Battles Page (`/battles`):**
+- Catch and display helpful error messages
+- Prevent silent failures
+- Guide user on what to do next
 
-- [ ] Active battles display
-- [ ] Can create new battle
-- [ ] API: `POST /api/battles` works
-- [ ] API: `GET /api/battles` works
-- [ ] API: `GET /api/battles/stats` works
+### Phase 6: Local Testing
 
-**Battle Detail (`/battles/[battleId]`):**
+**Prerequisites:** Local environment with .env configured
 
-- [ ] Battle details load
-- [ ] Tasks display correctly
-- [ ] Can complete tasks
-- [ ] API: `POST /api/battles/tasks/complete` works
-- [ ] Timer updates in real-time
-- [ ] Battle results show correctly
+1. **Test complete onboarding flow**
 
-### Phase F: Forum System
+- Sign up new user
+- Complete onboarding process
+- Verify dashboard access
+- Check database records
 
-**Forum Page (`/forum`):**
+2. **Test edge cases**
 
-- [ ] Thread list displays
-- [ ] Can filter threads
-- [ ] Can create new thread
-- [ ] API: `GET /api/forum/threads` works
-- [ ] API: `POST /api/forum/threads` works
+- User exists without `primary_craving`
+- Webhook fails during sign-up
+- Network errors during onboarding
+- Multiple onboarding attempts
 
-**Thread Detail (`/forum/[threadId]`):**
+### Phase 7: Vercel Deployment Fix
 
-- [ ] Thread content loads
-- [ ] Replies display
-- [ ] Can post reply
-- [ ] Can upvote
-- [ ] API: `GET /api/forum/threads/[threadId]` works
-- [ ] API: `POST /api/forum/replies` works
-- [ ] API: `POST /api/forum/upvote` works
-- [ ] API: `POST /api/forum/suggest-reply` works (AI)
+**Files:** Vercel environment variables
 
-### Phase G: Leaderboard & Progress
+1. **Verify all environment variables are set**
 
-**Leaderboard (`/leaderboard`):**
+- `CLERK_WEBHOOK_SECRET` configured
+- Supabase credentials correct
+- All required variables present
 
-- [ ] Rankings display
-- [ ] User position shows
-- [ ] Filters work
-- [ ] API: `GET /api/leaderboard` works
+2. **Verify webhook is accessible**
 
-**Progress Page (`/progress/[userId]`):**
+- Clerk webhook URL points to production
+- Webhook endpoint is public (not auth-protected)
+- Webhook logs show successful events
 
-- [ ] User progress loads
-- [ ] Charts display correctly
-- [ ] Stats are accurate
+## Success Criteria
 
-### Phase H: Admin Features
+- [ ] New user can sign up successfully
+- [ ] User record is created in Supabase `users` table
+- [ ] User can complete onboarding without errors
+- [ ] Clicking "Start My Journey" redirects to dashboard
+- [ ] Dashboard loads with user data visible
+- [ ] No infinite redirect loops
+- [ ] Process works locally and on Vercel
 
-**Admin Dashboard (`/admin`):**
+## Key Files to Modify
 
-- [ ] Only accessible to admin users
-- [ ] Metrics display
-- [ ] API: `GET /api/admin/metrics` works
+1. `app/api/webhooks/clerk/route.ts` - Fix user creation webhook
+2. `app/api/onboarding/complete/route.ts` - Add user creation fallback
+3. `app/api/user/profile/route.ts` - Improve profile retrieval
+4. `app/dashboard/page.tsx` - Fix onboarding validation
+5. `lib/auth-utils.ts` - Improve helper functions
 
-### Phase I: Payment & Subscription
+## Rollback Plan
 
-**Trial System:**
+If issues persist:
 
-- [ ] Can start trial
-- [ ] API: `POST /api/trial/start` works
-- [ ] Trial banner updates
-
-**Stripe Integration:**
-
-- [ ] Can create checkout session
-- [ ] API: `POST /api/stripe/create-checkout-session` works
-- [ ] Webhook endpoint exists: `POST /api/stripe/webhook`
-
-### Phase J: Webhooks & Background
-
-**Clerk Webhook:**
-
-- [ ] Endpoint exists: `POST /api/webhooks/clerk`
-- [ ] Handles user.created event
-- [ ] Handles user.updated event
-- [ ] Handles user.deleted event
-
-**Health Check:**
-
-- [ ] API: `GET /api/health` works
-- [ ] Returns proper status
-- [ ] Shows service health
-
-## 5. Testing Execution Strategy
-
-**Quick Testing Approach:**
-
-1. **Automated API Testing** (5 min)
-
-   - Use curl/Postman to test all API endpoints
-   - Check response codes and data structure
-
-2. **Manual UI Testing** (15 min)
-
-   - Follow user journey: Sign up → Onboarding → Dashboard → Features
-   - Test one feature from each category
-   - Focus on critical path
-
-3. **Error Testing** (5 min)
-
-   - Test with invalid data
-   - Test unauthorized access
-   - Test missing parameters
-
-## 6. Debug & Fix Issues
-
-**For each failing test:**
-
-- Identify the error in console/logs
-- Fix the root cause
-- Re-test to confirm fix
-- Document the fix
-
-**Common issues to watch for:**
-
-- Missing environment variables
-- Database connection errors
-- Authentication/authorization failures
-- API endpoint errors
-- Type errors
-- Missing dependencies
-
-## 7. Final Validation
-
-**Before pushing to repo:**
-
-- [ ] All critical features work
-- [ ] No console errors on main pages
-- [ ] Authentication flow complete
-- [ ] At least one feature from each category works
-- [ ] Build succeeds: `npm run build`
-- [ ] Type check passes: `npm run type-check`
-
-## 8. Push to Repository
-
-```bash
-git add .
-git commit -m "Production-ready: All features tested and working"
-git push origin main
-```
-
-## Testing Priority Levels
-
-**P0 (Critical - Must Work):**
-
-- Authentication (sign up/sign in)
-- Dashboard loads
-- One level completion
-- Health check endpoint
-
-**P1 (High - Should Work):**
-
-- Onboarding flow
-- Battle creation
-- Forum thread creation
-- Leaderboard display
-
-**P2 (Medium - Nice to Have):**
-
-- AI features
-- Admin dashboard
-- Payment flow
-- Advanced filtering
-
-## Expected Timeline
-
-- Environment setup: 2 min
-- Fix build issues: 5 min
-- Start server: 1 min
-- P0 testing: 5 min
-- P1 testing: 10 min
-- P2 testing: 5 min
-- Debug & fixes: 10 min
-- Final validation: 2 min
-
-**Total: ~40 minutes**
+1. Add temporary bypass for onboarding check
+2. Allow all authenticated users to access dashboard
+3. Show onboarding prompt in dashboard instead of blocking
+4. Fix underlying issues without blocking user flow
 
 ### To-dos
 

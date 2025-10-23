@@ -12,11 +12,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log(`Fetching profile for user: ${userId}`);
+
     // Get user profile
     const userProfile = await getCurrentUserProfile();
     if (!userProfile) {
+      console.log(`No user profile found for: ${userId}`);
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    console.log(`User profile found: ${userProfile.id}, primary_craving: ${userProfile.primary_craving}`);
 
     // Get current level
     const { data: currentLevel, error: levelError } = await supabaseServer
