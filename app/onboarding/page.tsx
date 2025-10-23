@@ -1,6 +1,9 @@
 // Onboarding flow for new users
 'use client';
 
+// Force dynamic rendering for auth-protected page
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';

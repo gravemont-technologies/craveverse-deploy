@@ -1,6 +1,9 @@
 // Admin dashboard for monitoring and management
 'use client';
 
+// Force dynamic rendering for auth-protected page
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

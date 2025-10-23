@@ -1,6 +1,9 @@
 // Individual battle page with real-time progress
 'use client';
 
+// Force dynamic rendering for auth-protected page
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -3,6 +3,9 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { rateLimiters } from './lib/rate-limiter';
 
+// Check if we're in build phase - skip Clerk middleware during build
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+
 const isPublicRoute = createRouteMatcher([
   '/',
   '/pricing',
@@ -27,11 +30,14 @@ const isProtectedRoute = createRouteMatcher([
   '/api/stripe(.*)',
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
-});
+// Skip Clerk middleware during build time
+export default isBuildTime 
+  ? () => NextResponse.next()
+  : clerkMiddleware(async (auth, req) => {
+      if (!isPublicRoute(req)) {
+        await auth.protect();
+      }
+    });
 
 export const config = {
   matcher: [
