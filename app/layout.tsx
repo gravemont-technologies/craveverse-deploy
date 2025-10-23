@@ -8,6 +8,9 @@ import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
+// Force all pages to be dynamic - prevents static generation during build
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'CraveVerse - Conquer Your Cravings',
   description: 'Transform your life by conquering your cravings with our 30-day journey system.',
