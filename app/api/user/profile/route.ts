@@ -52,7 +52,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log(`User profile found: ${userProfile.id}, primary_craving: ${userProfile.primary_craving}`);
+    // TypeScript assertion: userProfile is guaranteed to exist at this point
+    const safeUserProfile = userProfile as NonNullable<typeof userProfile>;
+    
+    console.log(`User profile found: ${safeUserProfile.id}, primary_craving: ${safeUserProfile.primary_craving}`);
 
     // Get current level
     const { data: currentLevel, error: levelError } = await supabaseServer
@@ -100,7 +103,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      user: userProfile,
+      user: safeUserProfile,
       currentLevel: currentLevel || null,
     });
   } catch (error) {

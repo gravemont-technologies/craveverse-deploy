@@ -66,8 +66,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User profile not available' }, { status: 500 });
     }
 
-    // Create OpenAI client
-    const openai = createOpenAIClient(userId, userProfile.subscription_tier as 'free' | 'plus' | 'ultra');
+    // TypeScript assertion: userProfile is guaranteed to exist at this point
+    const safeUserProfile = userProfile as NonNullable<typeof userProfile>;
+    
+    // Create OpenAI client with guaranteed non-null userProfile
+    const openai = createOpenAIClient(userId, safeUserProfile.subscription_tier as 'free' | 'plus' | 'ultra');
 
     // Generate personalization
     const personalization = await openai.generateOnboardingPersonalization(
