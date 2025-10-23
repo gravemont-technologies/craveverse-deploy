@@ -31,6 +31,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Check if we're in build phase - skip Clerk entirely during build
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+  
   // Check if we have a valid Clerk publishable key
   const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const isValidClerkKey = clerkPubKey && 
@@ -38,30 +41,29 @@ export default function RootLayout({
     !clerkPubKey.includes('placeholder') &&
     clerkPubKey.length > 50; // Real Clerk keys are much longer
 
-  // If we have a valid key, use ClerkProvider for full auth functionality
-  // Otherwise, render without Clerk for build-time compatibility
-  if (isValidClerkKey) {
+  // Skip Clerk during build time OR if we don't have a valid key
+  if (isBuildTime || !isValidClerkKey) {
     return (
-      <ClerkProvider>
-        <html lang="en">
-          <body className={inter.className}>
-            {children}
-            <Toaster position="top-right" />
-            {/* <PerformanceMonitor /> */}
-          </body>
-        </html>
-      </ClerkProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          {children}
+          <Toaster position="top-right" />
+          {/* <PerformanceMonitor /> */}
+        </body>
+      </html>
     );
   }
 
-  // Build-time or invalid key: render without Clerk
+  // Runtime with valid key: use ClerkProvider for full auth functionality
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        {children}
-        <Toaster position="top-right" />
-        {/* <PerformanceMonitor /> */}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          {children}
+          <Toaster position="top-right" />
+          {/* <PerformanceMonitor /> */}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
