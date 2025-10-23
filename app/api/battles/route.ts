@@ -1,14 +1,9 @@
 // API route for battles
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../lib/auth-utils';
 import { QueueUtils } from '../../../lib/queue';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get active battles (waiting or active)
-    const { data: activeBattles, error: activeError } = await supabase
+    const { data: activeBattles, error: activeError } = await supabaseServer
       .from('battles')
       .select(`
         id,
@@ -52,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get completed battles
-    const { data: completedBattles, error: completedError } = await supabase
+    const { data: completedBattles, error: completedError } = await supabaseServer
       .from('battles')
       .select(`
         id,
@@ -116,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user can create battles (rate limiting)
-    const { data: recentBattles, error: recentError } = await supabase
+    const { data: recentBattles, error: recentError } = await supabaseServer
       .from('battles')
       .select('id')
       .eq('user1_id', userProfile.id)
@@ -138,7 +133,7 @@ export async function POST(request: NextRequest) {
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + duration_hours * 60 * 60 * 1000);
 
-    const { data: battle, error: battleError } = await supabase
+    const { data: battle, error: battleError } = await supabaseServer
       .from('battles')
       .insert({
         user1_id: userProfile.id,
@@ -177,7 +172,7 @@ export async function POST(request: NextRequest) {
 
     // Log activity
     try {
-      await supabase
+      await supabaseServer
         .from('activity_log')
         .insert({
           user_id: userProfile.id,

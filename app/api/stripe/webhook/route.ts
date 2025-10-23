@@ -1,12 +1,8 @@
 // Stripe webhook handler for subscription events
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import Stripe from 'stripe';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover',
@@ -78,7 +74,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   // Update user's subscription status
-  const { error } = await supabase
+  const { error } = await supabaseServer
     .from('users')
     .update({
       plan_id: planId,
@@ -101,7 +97,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   }
 
   // Create subscription record
-  const { error } = await supabase
+  const { error } = await supabaseServer
     .from('subscriptions')
     .insert({
       user_id: userId,
@@ -120,7 +116,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  const { error } = await supabase
+  const { error } = await supabaseServer
     .from('subscriptions')
     .update({
       status: subscription.status,
@@ -137,7 +133,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   // Update subscription status to cancelled
-  const { error } = await supabase
+  const { error } = await supabaseServer
     .from('subscriptions')
     .update({
       status: 'cancelled',
@@ -151,14 +147,14 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 
   // Downgrade user to free plan
-  const { data: subscriptionData } = await supabase
+  const { data: subscriptionData } = await supabaseServer
     .from('subscriptions')
     .select('user_id')
     .eq('stripe_subscription_id', subscription.id)
     .single();
 
   if (subscriptionData) {
-    const { error: userError } = await supabase
+    const { error: userError } = await supabaseServer
       .from('users')
       .update({
         plan_id: 'free',
@@ -174,7 +170,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // Log successful payment
-  const { error } = await supabase
+  const { error } = await supabaseServer
     .from('transactions')
     .insert({
       user_id: invoice.metadata?.user_id,
@@ -191,7 +187,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Log failed payment
-  const { error } = await supabase
+  const { error } = await supabaseServer
     .from('transactions')
     .insert({
       user_id: invoice.metadata?.user_id,

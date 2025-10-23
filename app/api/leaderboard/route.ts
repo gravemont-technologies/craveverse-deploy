@@ -1,13 +1,9 @@
 // API route for leaderboard data
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../lib/auth-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get overall leaderboard (top 100 users by XP)
-    const { data: overallData, error: overallError } = await supabase
+    const { data: overallData, error: overallError } = await supabaseServer
       .from('users')
       .select(`
         id,
@@ -47,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get battle wins for each user
-    const { data: battleData, error: battleError } = await supabase
+    const { data: battleData, error: battleError } = await supabaseServer
       .from('battles')
       .select('winner_id, user1_id, user2_id')
       .eq('status', 'completed')
@@ -58,7 +54,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get level completion counts
-    const { data: levelData, error: levelError } = await supabase
+    const { data: levelData, error: levelError } = await supabaseServer
       .from('user_levels')
       .select('user_id, status')
       .eq('status', 'completed');

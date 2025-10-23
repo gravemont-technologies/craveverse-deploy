@@ -1,15 +1,11 @@
 // API route for completing levels
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { createOpenAIClient } from '../../../../lib/openai-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 import { CONFIG } from '../../../../lib/config';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get level details
-    const { data: level, error: levelError } = await supabase
+    const { data: level, error: levelError } = await supabaseServer
       .from('levels')
       .select('*')
       .eq('id', levelId)
@@ -54,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if level is already completed
-    const { data: existingProgress, error: progressError } = await supabase
+    const { data: existingProgress, error: progressError } = await supabaseServer
       .from('user_progress')
       .select('*')
       .eq('user_id', userProfile.id)
@@ -94,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user progress
-    const { error: progressUpdateError } = await supabase
+    const { error: progressUpdateError } = await supabaseServer
       .from('user_progress')
       .upsert({
         user_id: userProfile.id,
@@ -117,7 +113,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Award XP and coins
-    const { error: rewardError } = await supabase
+    const { error: rewardError } = await supabaseServer
       .from('users')
       .update({
         xp: userProfile.xp + level.xp_reward,
@@ -138,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     // Log activity
     try {
-      await supabase
+      await supabaseServer
         .from('activity_log')
         .insert({
           user_id: userProfile.id,

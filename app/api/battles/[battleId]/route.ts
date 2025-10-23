@@ -1,13 +1,9 @@
 // API route for individual battle details
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(
   request: NextRequest,
@@ -27,7 +23,7 @@ export async function GET(
     }
 
     // Get battle details
-    const { data: battle, error: battleError } = await supabase
+    const { data: battle, error: battleError } = await supabaseServer
       .from('battles')
       .select(`
         id,
@@ -50,7 +46,7 @@ export async function GET(
     }
 
     // Check if user is part of this battle
-    const { data: userBattle, error: userBattleError } = await supabase
+    const { data: userBattle, error: userBattleError } = await supabaseServer
       .from('battles')
       .select('user1_id, user2_id')
       .eq('id', battleId)
@@ -65,7 +61,7 @@ export async function GET(
     }
 
     // Get battle tasks
-    const { data: tasks, error: tasksError } = await supabase
+    const { data: tasks, error: tasksError } = await supabaseServer
       .from('battle_tasks')
       .select(`
         id,

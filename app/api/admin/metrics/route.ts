@@ -1,13 +1,9 @@
 // API route for admin metrics
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total users
-    const { count: totalUsers, error: totalUsersError } = await supabase
+    const { count: totalUsers, error: totalUsersError } = await supabaseServer
       .from('users')
       .select('*', { count: 'exact', head: true });
 
@@ -60,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get active users (users who have logged in within the timeframe)
-    const { count: activeUsers, error: activeUsersError } = await supabase
+    const { count: activeUsers, error: activeUsersError } = await supabaseServer
       .from('users')
       .select('*', { count: 'exact', head: true })
       .gte('last_sign_in_at', startDate.toISOString());
@@ -74,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get revenue data
-    const { data: revenueData, error: revenueError } = await supabase
+    const { data: revenueData, error: revenueError } = await supabaseServer
       .from('transactions')
       .select('amount, created_at')
       .eq('status', 'completed')
@@ -94,7 +90,7 @@ export async function GET(request: NextRequest) {
     ).reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
 
     // Get AI costs
-    const { data: aiUsageData, error: aiUsageError } = await supabase
+    const { data: aiUsageData, error: aiUsageError } = await supabaseServer
       .from('ai_usage_log')
       .select('cost_usd, created_at')
       .gte('created_at', startDate.toISOString());
@@ -111,7 +107,7 @@ export async function GET(request: NextRequest) {
     const aiCostPerUser = (totalUsers && totalUsers > 0) ? aiCosts / totalUsers : 0;
 
     // Get user tier distribution
-    const { data: userTiersData, error: userTiersError } = await supabase
+    const { data: userTiersData, error: userTiersError } = await supabaseServer
       .from('users')
       .select('plan_id')
       .not('plan_id', 'is', null);
@@ -137,7 +133,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Get top AI features
-    const { data: topFeaturesData, error: topFeaturesError } = await supabase
+    const { data: topFeaturesData, error: topFeaturesError } = await supabaseServer
       .from('ai_usage_log')
       .select('feature')
       .gte('created_at', startDate.toISOString());
@@ -162,7 +158,7 @@ export async function GET(request: NextRequest) {
       .slice(0, 5);
 
     // Get recent activity
-    const { data: recentActivityData, error: recentActivityError } = await supabase
+    const { data: recentActivityData, error: recentActivityError } = await supabaseServer
       .from('activity_log')
       .select('action, user_id, created_at, users!inner(name)')
       .gte('created_at', startDate.toISOString())

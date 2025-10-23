@@ -1,13 +1,9 @@
 // API route for starting free trial
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already has an active subscription or trial
-    const { data: existingSubscription, error: subError } = await supabase
+    const { data: existingSubscription, error: subError } = await supabaseServer
       .from('subscriptions')
       .select('status, plan_id, trial_end')
       .eq('user_id', userProfile.id)
@@ -55,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has used trial before
-    const { data: trialHistory, error: trialError } = await supabase
+    const { data: trialHistory, error: trialError } = await supabaseServer
       .from('trial_history')
       .select('id')
       .eq('user_id', userProfile.id)
@@ -82,7 +78,7 @@ export async function POST(request: NextRequest) {
     const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
     // Create trial subscription
-    const { data: subscription, error: createError } = await supabase
+    const { data: subscription, error: createError } = await supabaseServer
       .from('subscriptions')
       .insert({
         user_id: userProfile.id,
@@ -105,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user's plan
-    const { error: updateUserError } = await supabase
+    const { error: updateUserError } = await supabaseServer
       .from('users')
       .update({
         plan_id: planId,
@@ -122,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Record trial history
-    const { error: trialHistoryError } = await supabase
+    const { error: trialHistoryError } = await supabaseServer
       .from('trial_history')
       .insert({
         user_id: userProfile.id,
@@ -138,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     // Log activity
     try {
-      await supabase
+      await supabaseServer
         .from('activity_log')
         .insert({
           user_id: userProfile.id,

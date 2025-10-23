@@ -1,13 +1,8 @@
 // API route for getting user profile and current level
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current level
-    const { data: currentLevel, error: levelError } = await supabase
+    const { data: currentLevel, error: levelError } = await supabaseServer
       .from('levels')
       .select('*')
       .eq('craving_type', userProfile.primary_craving)
@@ -40,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if current level is completed
-    const { data: progress, error: progressError } = await supabase
+    const { data: progress, error: progressError } = await supabaseServer
       .from('user_progress')
       .select('completed_at')
       .eq('user_id', userProfile.id)
@@ -53,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // If current level is completed, get next level
     if (progress?.completed_at && userProfile.current_level < 30) {
-      const { data: nextLevel, error: nextLevelError } = await supabase
+      const { data: nextLevel, error: nextLevelError } = await supabaseServer
         .from('levels')
         .select('*')
         .eq('craving_type', userProfile.primary_craving)

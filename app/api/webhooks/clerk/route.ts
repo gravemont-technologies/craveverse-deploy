@@ -2,12 +2,8 @@
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(req: Request) {
   // Get the headers
@@ -54,7 +50,7 @@ export async function POST(req: Request) {
     
     try {
       // Create user profile in Supabase
-      const { error } = await supabase
+      const { error } = await supabaseServer
         .from('users')
         .insert({
           clerk_user_id: id,
@@ -89,7 +85,7 @@ export async function POST(req: Request) {
     
     try {
       // Update user profile in Supabase
-      const { error } = await supabase
+      const { error } = await supabaseServer
         .from('users')
         .update({
           email: email_addresses[0]?.email_address,
@@ -119,7 +115,7 @@ export async function POST(req: Request) {
     
     try {
       // Delete user profile and related data from Supabase
-      const { error } = await supabase
+      const { error } = await supabaseServer
         .from('users')
         .delete()
         .eq('clerk_user_id', id);

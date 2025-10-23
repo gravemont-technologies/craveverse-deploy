@@ -1,13 +1,8 @@
 // API route for forum threads
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +10,7 @@ export async function GET(request: NextRequest) {
     const craving = searchParams.get('craving') || 'all';
     const sort = searchParams.get('sort') || 'recent';
 
-    let query = supabase
+    let query = supabaseServer
       .from('forum_posts')
       .select(`
         id,
@@ -113,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user can create threads (rate limiting)
-    const { data: recentPosts, error: recentError } = await supabase
+    const { data: recentPosts, error: recentError } = await supabaseServer
       .from('forum_posts')
       .select('id')
       .eq('user_id', userProfile.id)
@@ -132,7 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create thread
-    const { data: thread, error: threadError } = await supabase
+    const { data: thread, error: threadError } = await supabaseServer
       .from('forum_posts')
       .insert({
         user_id: userProfile.id,
@@ -167,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // Log activity
     try {
-      await supabase
+      await supabaseServer
         .from('activity_log')
         .insert({
           user_id: userProfile.id,

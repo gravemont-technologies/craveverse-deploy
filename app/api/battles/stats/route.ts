@@ -1,13 +1,9 @@
 // API route for battle statistics
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all battles for the user
-    const { data: battles, error: battlesError } = await supabase
+    const { data: battles, error: battlesError } = await supabaseServer
       .from('battles')
       .select('status, winner_id, user1_id, user2_id, created_at')
       .or(`user1_id.eq.${userProfile.id},user2_id.eq.${userProfile.id}`)

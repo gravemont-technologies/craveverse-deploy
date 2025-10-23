@@ -1,12 +1,8 @@
 // API route for individual thread details
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +12,7 @@ export async function GET(
     const { threadId } = await params;
 
     // Get thread details
-    const { data: thread, error: threadError } = await supabase
+    const { data: thread, error: threadError } = await supabaseServer
       .from('forum_posts')
       .select(`
         id,
@@ -41,7 +37,7 @@ export async function GET(
     }
 
     // Get replies
-    const { data: replies, error: repliesError } = await supabase
+    const { data: replies, error: repliesError } = await supabaseServer
       .from('forum_replies')
       .select(`
         id,

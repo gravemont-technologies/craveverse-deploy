@@ -1,13 +1,9 @@
 // API route for forum upvoting
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has already upvoted this thread
-    const { data: existingUpvote, error: upvoteCheckError } = await supabase
+    const { data: existingUpvote, error: upvoteCheckError } = await supabaseServer
       .from('forum_upvotes')
       .select('id')
       .eq('user_id', userProfile.id)
@@ -65,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create upvote record
-    const { error: upvoteError } = await supabase
+    const { error: upvoteError } = await supabaseServer
       .from('forum_upvotes')
       .insert({
         user_id: userProfile.id,
@@ -82,13 +78,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current upvote count and increment
-    const { data: postData } = await supabase
+    const { data: postData } = await supabaseServer
       .from('forum_posts')
       .select('upvotes')
       .eq('id', threadId)
       .single();
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseServer
       .from('forum_posts')
       .update({
         upvotes: (postData?.upvotes || 0) + 1,
@@ -104,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Deduct CraveCoins from user
-    const { error: coinError } = await supabase
+    const { error: coinError } = await supabaseServer
       .from('users')
       .update({
         cravecoins: userProfile.cravecoins - upvoteCost,
@@ -122,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     // Log activity
     try {
-      await supabase
+      await supabaseServer
         .from('activity_log')
         .insert({
           user_id: userProfile.id,

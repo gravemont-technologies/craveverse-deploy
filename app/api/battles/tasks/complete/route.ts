@@ -1,13 +1,9 @@
 // API route for completing battle tasks
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../../lib/auth-utils';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is part of this battle
-    const { data: battle, error: battleError } = await supabase
+    const { data: battle, error: battleError } = await supabaseServer
       .from('battles')
       .select('user1_id, user2_id, status, end_time')
       .eq('id', battleId)
@@ -56,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if task exists and is not already completed
-    const { data: task, error: taskError } = await supabase
+    const { data: task, error: taskError } = await supabaseServer
       .from('battle_tasks')
       .select('id, completed, xp_reward, coin_reward')
       .eq('id', taskId)
@@ -72,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark task as completed
-    const { error: updateTaskError } = await supabase
+    const { error: updateTaskError } = await supabaseServer
       .from('battle_tasks')
       .update({
         completed: true,
@@ -93,13 +89,13 @@ export async function POST(request: NextRequest) {
     const updateField = isUser1 ? 'user1_tasks_completed' : 'user2_tasks_completed';
 
     // Get current value and increment
-    const { data: battleData } = await supabase
+    const { data: battleData } = await supabaseServer
       .from('battles')
       .select(updateField)
       .eq('id', battleId)
       .single();
 
-    const { error: updateBattleError } = await supabase
+    const { error: updateBattleError } = await supabaseServer
       .from('battles')
       .update({
         [updateField]: ((battleData as any)?.[updateField] || 0) + 1,
@@ -115,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Award XP and CraveCoins to user
-    const { error: updateUserError } = await supabase
+    const { error: updateUserError } = await supabaseServer
       .from('users')
       .update({
         xp: userProfile.xp + task.xp_reward,
@@ -133,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if battle should be completed
-    const { data: updatedBattle, error: updatedBattleError } = await supabase
+    const { data: updatedBattle, error: updatedBattleError } = await supabaseServer
       .from('battles')
       .select('user1_tasks_completed, user2_tasks_completed, user1_id, user2_id')
       .eq('id', battleId)
@@ -144,7 +140,7 @@ export async function POST(request: NextRequest) {
     } else if (updatedBattle) {
       // If both players have completed all tasks, determine winner
       if (updatedBattle.user1_tasks_completed >= 3 && updatedBattle.user2_tasks_completed >= 3) {
-        const { error: completeBattleError } = await supabase
+        const { error: completeBattleError } = await supabaseServer
           .from('battles')
           .update({
             status: 'completed',
@@ -160,7 +156,7 @@ export async function POST(request: NextRequest) {
 
     // Log activity
     try {
-      await supabase
+      await supabaseServer
         .from('activity_log')
         .insert({
           user_id: userProfile.id,

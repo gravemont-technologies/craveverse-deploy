@@ -1,15 +1,11 @@
 // API route for creating Stripe checkout sessions
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import Stripe from 'stripe';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 import { PRICING_TIERS } from '../../../../lib/config';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover',
@@ -38,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already has an active subscription
-    const { data: existingSubscription, error: subError } = await supabase
+    const { data: existingSubscription, error: subError } = await supabaseServer
       .from('subscriptions')
       .select('status, plan_id')
       .eq('user_id', userProfile.id)

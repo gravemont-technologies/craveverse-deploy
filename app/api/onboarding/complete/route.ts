@@ -1,14 +1,10 @@
 // API route for completing onboarding
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-client';
 import { updateUserProfile } from '../../../../lib/auth-utils';
 import { QueueUtils } from '../../../../lib/queue';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user profile
-    const { data: userProfile, error: userError } = await supabase
+    const { data: userProfile, error: userError } = await supabaseServer
       .from('users')
       .select('*')
       .eq('clerk_user_id', userId)
@@ -39,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user profile with onboarding data
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseServer
       .from('users')
       .update({
         primary_craving: craving,
@@ -71,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Create initial pause tokens record
     try {
-      await supabase
+      await supabaseServer
         .from('pause_tokens')
         .insert({
           user_id: userProfile.id,
@@ -85,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // Log onboarding completion
     try {
-      await supabase
+      await supabaseServer
         .from('activity_log')
         .insert({
           user_id: userProfile.id,

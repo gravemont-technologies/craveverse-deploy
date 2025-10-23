@@ -6,13 +6,32 @@
   "regions": ["iad1"],
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 10
+      "maxDuration": 60
+    },
+    "app/api/forum/suggest-reply/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/onboarding/personalize/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/onboarding/complete/route.ts": {
+      "maxDuration": 90
+    },
+    "app/api/battles/route.ts": {
+      "maxDuration": 90
+    },
+    "app/api/battles/[battleId]/route.ts": {
+      "maxDuration": 90
     }
   },
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
@@ -30,12 +49,6 @@
           "value": "strict-origin-when-cross-origin"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/health",
-      "destination": "/api/health"
     }
   ]
 }
