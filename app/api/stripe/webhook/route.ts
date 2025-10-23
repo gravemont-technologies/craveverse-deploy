@@ -4,11 +4,24 @@ import { supabaseServer } from '@/lib/supabase-client';
 import Stripe from 'stripe';
 
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-09-30.clover',
-});
+// Lazy Stripe client initialization
+function getStripeClient() {
+  const apiKey = process.env.STRIPE_SECRET_KEY;
+  if (!apiKey || apiKey.includes('placeholder') || apiKey.includes('sk_test_')) {
+    throw new Error('Stripe API key not configured');
+  }
+  return new Stripe(apiKey, {
+    apiVersion: '2025-09-30.clover',
+  });
+}
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+function getWebhookSecret() {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret || secret.includes('placeholder')) {
+    throw new Error('Stripe webhook secret not configured');
+  }
+  return secret;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,9 +31,20 @@ export async function POST(request: NextRequest) {
     let event: Stripe.Event;
 
     try {
+      const stripe = getStripeClient();
+      const webhookSecret = getWebhookSecret();
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
+      
+      // Handle Stripe configuration errors
+      if (err instanceof Error && err.message.includes('not configured')) {
+        return NextResponse.json(
+          { error: 'Payment service not configured' },
+          { status: 503 }
+        );
+      }
+      
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 

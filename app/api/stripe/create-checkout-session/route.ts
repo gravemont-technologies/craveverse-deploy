@@ -7,9 +7,16 @@ import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 import { PRICING_TIERS } from '../../../../lib/config';
 
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-09-30.clover',
-});
+// Lazy Stripe client initialization
+function getStripeClient() {
+  const apiKey = process.env.STRIPE_SECRET_KEY;
+  if (!apiKey || apiKey.includes('placeholder') || apiKey.includes('sk_test_')) {
+    throw new Error('Stripe API key not configured');
+  }
+  return new Stripe(apiKey, {
+    apiVersion: '2025-09-30.clover',
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,6 +72,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Initialize Stripe client
+    const stripe = getStripeClient();
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer_email: userProfile.email,
@@ -104,6 +114,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Stripe checkout session error:', error);
+    
+    // Handle Stripe configuration errors
+    if (error instanceof Error && error.message.includes('not configured')) {
+      return NextResponse.json(
+        { error: 'Payment service not configured' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
