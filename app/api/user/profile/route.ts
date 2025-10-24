@@ -3,25 +3,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
+import { createLogger, getTraceIdFromHeaders, createTraceId } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const traceId = getTraceIdFromHeaders(request.headers) || createTraceId();
+  const logger = createLogger('user-profile-api', traceId);
+  
   try {
+    logger.info('Profile API request started');
+    
     const { userId } = await auth();
     
     if (!userId) {
+      logger.warn('Unauthorized request - no userId');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log(`Fetching profile for user: ${userId}`);
+    logger.info('Fetching profile for user', { userId });
 
     // Get user profile
     let userProfile = await getCurrentUserProfile();
     
     // If user doesn't exist, create them (fallback for webhook failure)
     if (!userProfile) {
-      console.log(`No user profile found for: ${userId}, creating fallback user`);
+      logger.info('No user profile found, creating fallback user', { userId });
       
       try {
         const { data: newUser, error: createError } = await supabaseServer
@@ -42,7 +49,7 @@ export async function GET(request: NextRequest) {
           .single();
 
         if (createError) {
-          console.error('Error creating fallback user:', createError);
+          logger.error('Error creating fallback user', { error: createError.message });
           // Return minimal profile instead of 500 error
           return NextResponse.json({
             user: {
@@ -64,14 +71,15 @@ export async function GET(request: NextRequest) {
               'Cache-Control': 'no-store, no-cache, must-revalidate',
               'Pragma': 'no-cache',
               'Expires': '0',
+              'x-trace-id': traceId,
             }
           });
         }
 
         userProfile = newUser;
-        console.log(`Fallback user created: ${newUser.id}`);
+        logger.info('Fallback user created successfully', { user_id: newUser.id });
       } catch (error) {
-        console.error('Error in fallback user creation:', error);
+        logger.error('Exception in fallback user creation', { error: error instanceof Error ? error.message : 'Unknown error' });
         // Return minimal profile instead of 500 error
         return NextResponse.json({
           user: {
@@ -93,6 +101,7 @@ export async function GET(request: NextRequest) {
             'Cache-Control': 'no-store, no-cache, must-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0',
+            'x-trace-id': traceId,
           }
         });
       }
@@ -101,7 +110,11 @@ export async function GET(request: NextRequest) {
     // TypeScript assertion: userProfile is guaranteed to exist at this point
     const safeUserProfile = userProfile as NonNullable<typeof userProfile>;
     
-    console.log(`User profile found: ${safeUserProfile.id}, primary_craving: ${safeUserProfile.primary_craving}`);
+    logger.info('User profile found', { 
+      user_id: safeUserProfile.id, 
+      primary_craving: safeUserProfile.primary_craving,
+      current_level: safeUserProfile.current_level 
+    });
 
     // Get current level
     const { data: currentLevel, error: levelError } = await supabaseServer
@@ -112,10 +125,10 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (levelError) {
-      console.error('Error fetching current level:', levelError);
+      logger.warn('Error fetching current level', { error: levelError.message });
       
       // FALLBACK: Return user without level (don't crash)
-      console.log('Returning user without level due to error');
+      logger.info('Returning user without level due to error');
       return NextResponse.json({
         user: safeUserProfile,
         currentLevel: null,
@@ -124,6 +137,7 @@ export async function GET(request: NextRequest) {
           'Cache-Control': 'no-store, no-cache, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0',
+          'x-trace-id': traceId,
         }
       });
     }
@@ -137,7 +151,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (progressError && progressError.code !== 'PGRST116') {
-      console.error('Error checking progress:', progressError);
+      logger.warn('Error checking progress', { error: progressError.message });
     }
 
     // If current level is completed, get next level
@@ -150,13 +164,22 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (!nextLevelError && nextLevel) {
+        logger.info('Returning next level', { level: nextLevel.level_number });
         return NextResponse.json({
           user: safeUserProfile,
           currentLevel: nextLevel,
+        }, {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'x-trace-id': traceId,
+          }
         });
       }
     }
 
+    logger.info('Profile API request completed successfully');
     return NextResponse.json({
       user: safeUserProfile,
       currentLevel: currentLevel || null,
@@ -165,10 +188,11 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
+        'x-trace-id': traceId,
       }
     });
   } catch (error) {
-    console.error('Profile fetch error:', error);
+    logger.error('Profile fetch error', { error: error instanceof Error ? error.message : 'Unknown error' });
     
     // Return minimal profile instead of 500 error to prevent crashes
     return NextResponse.json({
@@ -191,6 +215,7 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
+        'x-trace-id': traceId,
       }
     });
   }

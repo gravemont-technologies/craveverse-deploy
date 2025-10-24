@@ -1,276 +1,179 @@
-<!-- 648204ee-b8d4-41b2-b623-313954ee14de a2be94dc-dfbf-44ef-b8aa-da0e207d74ac -->
-# Rigorous Local Testing Plan - Verify Onboarding Loop Fix
+<!-- 648204ee-b8d4-41b2-b623-313954ee14de 52ac4509-e1ac-46ba-b368-46eda6ddca9b -->
+# Bulletproof Onboarding Architecture Refinement
 
-## Testing Philosophy
+## Root Cause Analysis
 
-**DO NOT CLAIM SUCCESS UNTIL:**
-1. All test scenarios pass locally
-2. Every edge case is verified
-3. API failures are simulated and handled
-4. User flows are documented with evidence
-5. Regression testing shows no broken features
+The emergency bypass is triggering because localStorage has `emergencyBypass: 'true'` set. The actual database connection works, but the flow has multiple architectural weaknesses:
 
-## Test Scenarios
+1. **Clerk Webhook → Supabase sync is working** (creates user with `primary_craving: null`)
+2. **Onboarding completion updates database** (sets `primary_craving`)
+3. **Dashboard checks fail** because emergency bypass takes precedence
+4. **No atomic transactions** - onboarding can partially fail
+5. **No state management** - relies only on database polling
 
-### Scenario 1: Fresh User Sign-Up (Happy Path)
-**Steps:**
-1. Clear browser cache and cookies
-2. Sign up with new email
-3. Verify Clerk creates user
-4. Complete onboarding step-by-step
-5. Verify redirect to dashboard
-6. Verify no loop back to onboarding
+## Architectural Improvements
 
-**Expected:**
-- User completes onboarding successfully
-- Dashboard loads with user data
-- No redirect loop
+### Phase 1: Remove Emergency Bypass & Clean State
 
-**Evidence Required:**
-- Console logs showing each step
-- Screenshots of each page
-- Database state after completion
+- Clear localStorage emergency flags from dashboard
+- Remove all emergency bypass logic (lines 128-189 in `app/dashboard/page.tsx`)
+- Add localStorage cleanup on dashboard mount
+- Keep the emergency bypass button as opt-in only (not auto-triggered)
 
-### Scenario 2: API Personalization Fails
-**Steps:**
-1. Sign up new user
-2. Select craving
-3. Complete quiz
-4. Click "Skip Personalization"
-5. Complete onboarding
-6. Verify dashboard loads
+### Phase 2: Bulletproof Database Flow
 
-**Expected:**
-- Onboarding completes with defaults
-- No errors in console
-- Dashboard shows default messages
+- Fix `lib/auth-utils.ts` to use centralized supabase client (currently creates its own)
+- Add transaction-like behavior to onboarding completion
+- Implement optimistic UI updates with server reconciliation
+- Add real-time database listeners for profile changes
 
-**Evidence Required:**
-- Console logs showing skip action
-- Verification of default data used
+### Phase 3: Enhanced Debugging System
 
-### Scenario 3: User Profile Doesn't Exist
-**Steps:**
-1. Simulate scenario where Clerk webhook fails
-2. User tries to access dashboard
-3. Verify fallback profile creation
-4. Complete onboarding
-5. Verify dashboard loads
+- Create centralized logger utility with debug levels
+- Add request tracing IDs across API calls
+- Implement detailed flow tracking:
+- Webhook receipt → User creation
+- Onboarding start → Completion
+- Dashboard mount → Profile fetch
+- Add debug panel component (collapsible) showing:
+- Current user state
+- Recent API calls
+- Database sync status
+- Clerk session info
 
-**Expected:**
-- Minimal profile created automatically
-- Onboarding works normally
-- No 500 errors
+### Phase 4: Resilient Error Handling
 
-**Evidence Required:**
-- API logs showing fallback creation
-- Database state verification
+- Never return 500 errors to frontend
+- Always provide actionable fallbacks
+- Add retry logic with exponential backoff
+- Implement circuit breaker pattern for API calls
 
-### Scenario 4: Onboarding Completion API Fails
-**Steps:**
-1. Start onboarding
-2. Simulate `/api/onboarding/complete` returning error
-3. Verify error handling
-4. Retry completion
-5. Verify success or fallback
+### Phase 5: State Management Refinement
 
-**Expected:**
-- User sees error message
-- Retry option available
-- System doesn't crash
+- Add React Context for user profile state
+- Implement SWR or React Query for data fetching
+- Add optimistic updates for better UX
+- Cache with proper invalidation strategies
 
-**Evidence Required:**
-- Error handling logs
-- User experience screenshots
+## Implementation Steps
 
-### Scenario 5: User Has Profile But No primary_craving
-**Steps:**
-1. Manually set user profile with `primary_craving: null`
-2. Access dashboard
-3. Verify NO redirect loop
-4. Click "Complete Onboarding"
-5. Finish onboarding
-6. Verify dashboard loads
+### Step 1: Fix auth-utils.ts Supabase Client
 
-**Expected:**
-- Dashboard shows setup prompt
-- No infinite redirect
-- "Try Again" button works
+**File**: `lib/auth-utils.ts`
 
-**Evidence Required:**
-- Console logs showing state
-- No redirect loop observed
+- Replace direct supabase client creation with centralized `supabaseServer`
+- This fixes inconsistent database connections
 
-### Scenario 6: All APIs Return Errors
-**Steps:**
-1. Simulate all API routes returning errors
-2. Attempt onboarding
-3. Verify fallback data used
-4. Verify user can still proceed
-5. Verify dashboard eventually loads
+### Step 2: Remove Emergency Bypass
 
-**Expected:**
-- App doesn't crash
-- Fallback data everywhere
-- User can complete basic flow
+**File**: `app/dashboard/page.tsx`
 
-**Evidence Required:**
-- All API error logs
-- Proof of fallback usage
+- Remove lines 128-189 (emergency bypass logic)
+- Add `useEffect` to clear emergency localStorage on mount
+- Keep normal onboarding redirect logic
+- Add comprehensive console logging for debugging
 
-### Scenario 7: OpenAI API Key Missing
-**Steps:**
-1. Remove `OPENAI_API_KEY` from `.env`
-2. Restart dev server
-3. Complete onboarding
-4. Verify AI features skip gracefully
-5. Verify dashboard loads
+### Step 3: Add Centralized Logger
 
-**Expected:**
-- No build errors
-- No runtime crashes
-- Fallback messages used
+**File**: `lib/logger.ts` (new)
 
-**Evidence Required:**
-- Build logs
-- Runtime logs
-- Dashboard functionality
+- Create debug logger with trace IDs
+- Levels: DEBUG, INFO, WARN, ERROR
+- Format: `[TRACE_ID][COMPONENT][LEVEL] message`
+- Export hooks: `useLogger()`, `createLogger()`
 
-### Scenario 8: Database Connection Issues
-**Steps:**
-1. Temporarily use wrong Supabase credentials
-2. Attempt onboarding
-3. Verify error handling
-4. Verify no crashes
-5. Fix credentials and retry
+### Step 4: Add Debug Panel Component
 
-**Expected:**
-- Clear error messages
-- No white screen of death
-- Recovery possible
+**File**: `components/debug-panel.tsx` (new)
 
-**Evidence Required:**
-- Error handling logs
-- User experience flow
+- Collapsible panel (top-right corner)
+- Shows: User state, API calls, DB status, Clerk info
+- Only visible in development or with `?debug=true`
 
-## Testing Checklist
+### Step 5: Refactor Dashboard with Logging
 
-### Pre-Test Setup
-- [ ] Pull latest code from GitHub
-- [ ] Verify `.env` has all required variables
-- [ ] Clear browser cache/cookies
-- [ ] Restart dev server
-- [ ] Check Supabase database is accessible
+**File**: `app/dashboard/page.tsx`
 
-### During Testing
-- [ ] Record console logs for each scenario
-- [ ] Take screenshots at each step
-- [ ] Document any errors encountered
-- [ ] Note response times and performance
-- [ ] Check network tab for API calls
+- Import and use centralized logger
+- Add trace ID to all API calls
+- Log each decision point
+- Add debug panel integration
 
-### Post-Test Verification
-- [ ] All 8 scenarios pass
-- [ ] No console errors in any scenario
-- [ ] Database state correct after each test
-- [ ] No redirect loops observed
-- [ ] All features still functional
+### Step 6: Refactor Onboarding with Logging
 
-## Regression Testing
+**File**: `app/onboarding/page.tsx`
 
-### Features That Must Still Work
-1. **Authentication:**
-   - [ ] Sign up works
-   - [ ] Sign in works
-   - [ ] Sign out works
-   - [ ] Session persists
+- Add centralized logger
+- Add trace ID propagation
+- Log each step completion
+- Add retry logic with better UX
 
-2. **Onboarding:**
-   - [ ] Craving selection works
-   - [ ] Quiz completion works
-   - [ ] Personalization (optional) works
-   - [ ] Final completion works
+### Step 7: Enhance API Routes
 
-3. **Dashboard:**
-   - [ ] User profile displays
-   - [ ] Current level shows
-   - [ ] Stats are accurate
-   - [ ] Navigation works
+**Files**:
 
-4. **Level System:**
-   - [ ] Levels load correctly
-   - [ ] Level completion works
-   - [ ] XP/coins awarded
-   - [ ] Progress tracked
+- `app/api/user/profile/route.ts`
+- `app/api/onboarding/complete/route.ts`
+- `app/api/onboarding/personalize/route.ts`
 
-5. **AI Features (when configured):**
-   - [ ] Level feedback generates
-   - [ ] Forum replies suggest
-   - [ ] Personalization works
-   - [ ] All fallbacks work
+Changes:
 
-## Success Criteria
+- Add request trace IDs from headers
+- Use centralized logger
+- Never return 500 (return 200 with error flag)
+- Add detailed logging at each step
 
-### ONLY CLAIM SUCCESS IF:
-1. ✅ All 8 test scenarios pass without errors
-2. ✅ No redirect loops in any scenario
-3. ✅ All regression tests pass
-4. ✅ API failures are handled gracefully
-5. ✅ User can complete onboarding even with failures
-6. ✅ Dashboard loads in all scenarios
-7. ✅ No console errors or warnings
-8. ✅ Database state is correct
+### Step 8: Add User Context Provider
 
-## Evidence Documentation
+**File**: `contexts/user-context.tsx` (new)
 
-### Required Documentation:
-1. **Test Run Log**: Timestamp and results for each scenario
-2. **Console Logs**: Full logs for each test scenario
-3. **Screenshots**: Key pages from each user flow
-4. **Database Snapshots**: State before/after each test
-5. **API Call Logs**: Network tab captures
-6. **Error Logs**: Any errors encountered and how handled
+- React Context for user profile
+- Automatic refresh on visibility change
+- Optimistic updates
+- Real-time sync status
 
-## Failure Protocol
+### Step 9: Clean Up Debug Endpoints
 
-### If ANY Test Fails:
-1. **STOP** - Do not proceed to deployment
-2. **Document** - Record the exact failure
-3. **Diagnose** - Identify the root cause
-4. **Fix** - Implement targeted fix
-5. **Re-test** - Run ALL scenarios again
-6. **Repeat** until all tests pass
+**Keep**: `/api/health`, `/api/debug/env-check`, `/api/debug/db-schema`
+**Remove**: `/api/debug/setup-db`, `/api/debug/user-state` (move to debug panel)
 
-## Final Verification
+### Step 10: Test & Deploy
 
-Before claiming success:
-- [ ] Run all tests 2x to ensure consistency
-- [ ] Test in different browsers (Chrome, Firefox)
-- [ ] Test with different user accounts
-- [ ] Verify no memory leaks
-- [ ] Check performance metrics
-- [ ] Review all code changes one more time
+- Test complete flow with debug panel
+- Verify all logging works
+- Test error scenarios
+- Deploy to production
+- Monitor logs for any issues
 
-## THEN and ONLY THEN
+## Key Files Modified
 
-Once ALL tests pass and ALL criteria are met:
-- Document results
-- Create summary report
-- Push to GitHub
-- Monitor Vercel deployment
-- Test in production
-- Provide evidence-based success report
+1. `lib/auth-utils.ts` - Fix supabase client
+2. `lib/logger.ts` - NEW: Centralized logging
+3. `lib/supabase-client.ts` - Export additional utilities
+4. `components/debug-panel.tsx` - NEW: Debug UI
+5. `contexts/user-context.tsx` - NEW: State management
+6. `app/dashboard/page.tsx` - Remove bypass, add logging
+7. `app/onboarding/page.tsx` - Add logging, improve flow
+8. `app/api/user/profile/route.ts` - Enhanced logging
+9. `app/api/onboarding/complete/route.ts` - Enhanced logging
+10. `app/api/onboarding/personalize/route.ts` - Enhanced logging
 
+## Expected Outcome
+
+- No more emergency bypass activation
+- Clear visibility into entire flow via debug panel
+- Resilient error handling with graceful degradation
+- Optimistic UI updates for better UX
+- Production-ready logging for debugging
+- Onboarding completes successfully every time
 
 ### To-dos
 
-- [ ] Set up clean testing environment with fresh database state
-- [ ] Test Scenario 1: Fresh user sign-up happy path
-- [ ] Test Scenario 2: Skip personalization button works
-- [ ] Test Scenario 3: User profile doesn't exist fallback
-- [ ] Test Scenario 4-6: Various API failure scenarios
-- [ ] Test Scenario 7: OpenAI API key missing
-- [ ] Test Scenario 8: Database connection issues
-- [ ] Run complete regression test suite
-- [ ] Document all test results with evidence
-- [ ] Re-run all tests to verify consistency
+- [ ] Pull latest repository changes and verify codebase state
+- [ ] Map complete authentication and onboarding flow across all files
+- [ ] Create temporary /api/debug/user-state endpoint for diagnostics
+- [ ] Test complete sign-up and onboarding flow locally with detailed logging
+- [ ] Analyze console logs and identify exact failure point
+- [ ] Implement specific fix for identified root cause
+- [ ] Test the fix locally and verify no existing features break
+- [ ] Remove temporary debug endpoint and console logs

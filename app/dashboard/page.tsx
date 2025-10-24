@@ -25,6 +25,9 @@ import { LevelCard } from '../../components/levels/level-card';
 import { DashboardStats } from '@/components/dashboard-stats';
 import { QuickActions } from '../../components/quick-actions';
 import { RecentActivity } from '@/components/recent-activity';
+import { useUserContext } from '@/contexts/user-context';
+import { useLogger } from '@/lib/logger';
+import { DebugPanel } from '@/components/debug-panel';
 
 interface UserProfile {
   id: string;
@@ -53,54 +56,72 @@ interface Level {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { userProfile, isLoading, error, refreshProfile, isOnboardingComplete, syncStatus } = useUserContext();
+  const logger = useLogger('Dashboard');
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [apiCalls, setApiCalls] = useState<any[]>([]);
+  const [dbStatus, setDbStatus] = useState<any>(null);
+
+  // Clear emergency bypass localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const emergencyBypass = localStorage.getItem('emergencyBypass');
+      if (emergencyBypass === 'true') {
+        logger.info('Clearing emergency bypass localStorage');
+        localStorage.removeItem('emergencyBypass');
+        localStorage.removeItem('onboardingData');
+      }
+    }
+  }, [logger]);
 
   useEffect(() => {
-    if (isLoaded && user) {
-      fetchUserData();
-    } else if (isLoaded && !user) {
+    if (isLoaded && !user) {
+      logger.info('No user authenticated, redirecting to sign-in');
       router.push('/sign-in');
     }
-  }, [isLoaded, user]);
+  }, [isLoaded, user, router, logger]);
 
 
-  const fetchUserData = async () => {
+  // Fetch current level when user profile changes
+  useEffect(() => {
+    if (userProfile?.primary_craving) {
+      fetchCurrentLevel();
+    }
+  }, [userProfile?.primary_craving]);
+
+  const fetchCurrentLevel = async () => {
+    if (!userProfile?.primary_craving) return;
+
     try {
-      console.log('Dashboard: Starting to fetch user data...');
-      
-      // First, check debug endpoint
-      const debugResponse = await fetch('/api/debug/user-state');
-      const debugData = await debugResponse.json();
-      console.log('Dashboard: Debug user state:', debugData);
-      
-      const response = await fetch(`/api/user/profile?t=${Date.now()}`, {
+      logger.info('Fetching current level', { 
+        craving: userProfile.primary_craving, 
+        level: userProfile.current_level 
+      });
+
+      const response = await fetch(`/api/levels/current?craving=${userProfile.primary_craving}&level=${userProfile.current_level}`, {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache',
+          'x-trace-id': logger.getTraceId(),
         }
       });
-      console.log('Dashboard: Profile API response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
-        console.log('Dashboard: Profile API data:', data);
-        setUserProfile(data.user);
-        setCurrentLevel(data.currentLevel);
+        setCurrentLevel(data.level);
+        logger.info('Current level fetched successfully', { level: data.level });
       } else {
-        console.error('Dashboard: Profile API failed:', response.status, response.statusText);
+        logger.warn('Failed to fetch current level', { status: response.status });
       }
     } catch (error) {
-      console.error('Dashboard: Error fetching user data:', error);
-    } finally {
-      setIsLoading(false);
+      logger.error('Error fetching current level', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 
   const handleLevelComplete = () => {
-    // Refresh data after level completion
-    fetchUserData();
+    logger.info('Level completed, refreshing data');
+    refreshProfile();
+    fetchCurrentLevel();
   };
 
   if (!isLoaded || isLoading) {
@@ -125,73 +146,10 @@ export default function DashboardPage() {
     );
   }
 
-  // Check for emergency bypass FIRST (before database checks)
-  const urlParams = new URLSearchParams(window.location.search);
-  const skipOnboarding = urlParams.get('skipOnboarding');
-  const emergencyBypass = localStorage.getItem('emergencyBypass') === 'true';
-  
-  if (skipOnboarding === 'true' || emergencyBypass) {
-    console.log('Dashboard: Emergency bypass activated - bypassing database checks');
-    
-    // Set emergency bypass data in localStorage
-    if (skipOnboarding === 'true') {
-      localStorage.setItem('emergencyBypass', 'true');
-      localStorage.setItem('onboardingData', JSON.stringify({
-        selectedCraving: 'nofap',
-        completed: true,
-        emergencyBypass: true
-      }));
-    }
-    
-    // Show emergency bypass dashboard
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h2 className="text-lg font-semibold text-yellow-800">Emergency Mode Active</h2>
-            <p className="text-yellow-700">Database connection unavailable. You can complete onboarding later.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-bold mb-2">🚫 NoFap Journey</h3>
-              <p className="text-gray-600 mb-4">Overcome pornography addiction and build self-control</p>
-              <div className="text-sm text-gray-500">Emergency Mode - Complete setup later</div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-bold mb-2">📊 Your Progress</h3>
-              <p className="text-gray-600 mb-4">Track your journey and celebrate wins</p>
-              <div className="text-sm text-gray-500">Emergency Mode - Data will sync when available</div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-bold mb-2">🏆 Community</h3>
-              <p className="text-gray-600 mb-4">Connect with others on similar journeys</p>
-              <div className="text-sm text-gray-500">Emergency Mode - Limited features</div>
-            </div>
-          </div>
-          
-          <div className="mt-8 text-center">
-            <Button onClick={() => router.push('/onboarding')} className="mr-4">
-              Complete Full Setup
-            </Button>
-            <Button variant="outline" onClick={() => {
-              localStorage.removeItem('emergencyBypass');
-              window.location.reload();
-            }}>
-              Exit Emergency Mode
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Check if user profile exists and onboarding is completed
-  if (!userProfile || !userProfile.primary_craving) {
+  if (!userProfile || !isOnboardingComplete) {
     const status = !userProfile ? 'No profile found' : 'Onboarding incomplete';
-    console.log(`Dashboard: ${status}, showing setup options`);
+    logger.info('User needs onboarding', { status, hasProfile: !!userProfile, isOnboardingComplete });
     
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -203,26 +161,18 @@ export default function DashboardPage() {
               : 'Please complete your onboarding to access the dashboard.'
             }
           </p>
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700">Error: {error}</p>
+            </div>
+          )}
           <div className="space-x-4">
             <Button onClick={() => router.push('/onboarding')}>
               {!userProfile ? 'Start Setup' : 'Complete Onboarding'}
             </Button>
-            {userProfile && (
-              <Button variant="outline" onClick={() => {
-                // Force refresh profile data instead of redirecting
-                window.location.reload();
-              }}>
-                Refresh Profile
-              </Button>
-            )}
-            {userProfile && (
-              <Button variant="outline" onClick={() => {
-                // Emergency bypass
-                window.location.href = '/dashboard?skipOnboarding=true';
-              }}>
-                Emergency Bypass
-              </Button>
-            )}
+            <Button variant="outline" onClick={refreshProfile}>
+              Refresh Profile
+            </Button>
           </div>
         </div>
       </div>
@@ -241,6 +191,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <DebugPanel 
+        logs={logger.getLogs()}
+        userState={userProfile}
+        apiCalls={apiCalls}
+        dbStatus={dbStatus}
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">

@@ -4,26 +4,35 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseServer } from '@/lib/supabase-client';
 import { updateUserProfile } from '../../../../lib/auth-utils';
 import { QueueUtils } from '../../../../lib/queue';
-
+import { createLogger, getTraceIdFromHeaders, createTraceId } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const traceId = getTraceIdFromHeaders(request.headers) || createTraceId();
+  const logger = createLogger('onboarding-complete-api', traceId);
+  
   try {
+    logger.info('Onboarding completion request started');
+    
     const { userId } = await auth();
     
     if (!userId) {
+      logger.warn('Unauthorized request - no userId');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { craving, quizAnswers, personalization } = await request.json();
 
     if (!craving) {
+      logger.warn('Missing craving selection', { craving });
       return NextResponse.json(
         { error: 'Craving selection is required' },
         { status: 400 }
       );
     }
+
+    logger.info('Processing onboarding completion', { userId, craving });
 
     // Make personalization optional - provide defaults if missing
     const safePersonalization = personalization || {
@@ -35,8 +44,6 @@ export async function POST(request: NextRequest) {
       ]
     };
 
-    console.log(`Processing onboarding completion for user: ${userId}, craving: ${craving}`);
-
     // Get user profile with fallback creation
     let { data: userProfile, error: userError } = await supabaseServer
       .from('users')
@@ -46,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     // If user doesn't exist, create them (fallback for webhook failure)
     if (userError && (userError.code === 'PGRST116' || userError.message?.includes('No rows found'))) {
-      console.log(`User not found, creating fallback user for: ${userId}`);
+      logger.info('User not found, creating fallback user', { userId });
       
       const { data: newUser, error: createError } = await supabaseServer
         .from('users')
@@ -66,19 +73,23 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createError) {
-        console.error('Error creating fallback user:', createError);
+        logger.error('Error creating fallback user', { error: createError.message });
         return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
       }
 
       userProfile = newUser;
-      console.log(`Fallback user created: ${newUser.id}`);
+      logger.info('Fallback user created successfully', { user_id: newUser.id });
     } else if (userError || !userProfile) {
-      console.error('Error fetching user profile:', userError);
+      logger.error('Error fetching user profile', { error: userError?.message });
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Update user profile with onboarding data
-    console.log(`Updating user profile ${userProfile.id} with primary_craving: ${craving}`);
+    logger.info('Updating user profile with onboarding data', { 
+      user_id: userProfile.id, 
+      craving,
+      hasPersonalization: !!personalization 
+    });
     
     const { error: updateError } = await supabaseServer
       .from('users')
@@ -95,21 +106,28 @@ export async function POST(request: NextRequest) {
       .eq('id', userProfile.id);
 
     if (updateError) {
-      console.error('Error updating user profile:', updateError);
-      console.error('Update error details:', JSON.stringify(updateError, null, 2));
+      logger.error('Error updating user profile', { 
+        error: updateError.message, 
+        user_id: userProfile.id,
+        craving 
+      });
       return NextResponse.json(
         { error: 'Failed to update profile' },
         { status: 500 }
       );
     }
 
-    console.log(`Successfully updated user profile ${userProfile.id} with primary_craving: ${craving}`);
+    logger.info('User profile updated successfully', { 
+      user_id: userProfile.id, 
+      primary_craving: craving 
+    });
 
     // Schedule AI personalization job for batch processing
     try {
       await QueueUtils.scheduleOnboardingPersonalization([userProfile.id], craving);
+      logger.info('AI personalization job scheduled', { user_id: userProfile.id });
     } catch (queueError) {
-      console.error('Error scheduling personalization job:', queueError);
+      logger.warn('Error scheduling personalization job', { error: queueError instanceof Error ? queueError.message : 'Unknown error' });
       // Don't fail the request if queue fails
     }
 
@@ -122,8 +140,9 @@ export async function POST(request: NextRequest) {
           tokens_available: 0,
           tokens_used: 0,
         });
+      logger.info('Pause tokens record created', { user_id: userProfile.id });
     } catch (tokenError) {
-      console.error('Error creating pause tokens record:', tokenError);
+      logger.warn('Error creating pause tokens record', { error: tokenError instanceof Error ? tokenError.message : 'Unknown error' });
       // Don't fail the request if this fails
     }
 
@@ -141,10 +160,16 @@ export async function POST(request: NextRequest) {
             personalization: safePersonalization,
           },
         });
+      logger.info('Onboarding completion logged', { user_id: userProfile.id });
     } catch (logError) {
-      console.error('Error logging onboarding completion:', logError);
+      logger.warn('Error logging onboarding completion', { error: logError instanceof Error ? logError.message : 'Unknown error' });
       // Don't fail the request if logging fails
     }
+
+    logger.info('Onboarding completion successful', { 
+      user_id: userProfile.id, 
+      primary_craving: craving 
+    });
 
     return NextResponse.json({
       success: true,
@@ -154,9 +179,13 @@ export async function POST(request: NextRequest) {
         primary_craving: craving,
         subscription_tier: userProfile.subscription_tier,
       },
+    }, {
+      headers: {
+        'x-trace-id': traceId,
+      }
     });
   } catch (error) {
-    console.error('Onboarding completion error:', error);
+    logger.error('Onboarding completion error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

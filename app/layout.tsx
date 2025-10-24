@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Toaster } from 'sonner';
+import { UserProvider } from '@/contexts/user-context';
 // import { PerformanceMonitor } from '@/components/performance-monitor';
 import './globals.css';
 
@@ -60,13 +61,15 @@ export default function RootLayout({
   // Runtime with valid key: use ClerkProvider for full auth functionality
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className={inter.className}>
-          {children}
-          <Toaster position="top-right" />
-          {/* <PerformanceMonitor /> */}
-        </body>
-      </html>
+      <UserProvider>
+        <html lang="en">
+          <body className={inter.className}>
+            {children}
+            <Toaster position="top-right" />
+            {/* <PerformanceMonitor /> */}
+          </body>
+        </html>
+      </UserProvider>
     </ClerkProvider>
   );
 }
