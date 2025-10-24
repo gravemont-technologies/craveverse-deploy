@@ -21,11 +21,17 @@ const createMockClient = () => ({
 function createSafeClient(url: string, key: string) {
   try {
     if (!url || !key || url === 'https://placeholder.supabase.co' || key === 'placeholder-anon-key' || key === 'placeholder-service-key') {
+      console.warn('Supabase: Using mock client due to missing/invalid credentials');
+      console.warn(`Supabase URL: ${url}`);
+      console.warn(`Supabase Key length: ${key?.length || 0}`);
       return createMockClient() as any;
     }
-    return createClient(url, key);
+    
+    const client = createClient(url, key);
+    console.log('Supabase: Real client created successfully');
+    return client;
   } catch (error) {
-    console.warn('Supabase client creation failed, using mock client:', error);
+    console.error('Supabase client creation failed, using mock client:', error);
     return createMockClient() as any;
   }
 }
@@ -56,6 +62,28 @@ export const supabaseAdmin = createSafeClient(supabaseUrl, supabaseServiceKey);
 // Safe createClient function that handles missing environment variables
 export function createSupabaseClient(url?: string, key?: string) {
   return createSafeClient(url || supabaseUrl, key || supabaseAnonKey);
+}
+
+// Test database connection
+export async function testDatabaseConnection() {
+  try {
+    console.log('Testing database connection...');
+    const { data, error } = await supabaseServer
+      .from('users')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      console.error('Database connection test failed:', error);
+      return { connected: false, error: error.message };
+    }
+    
+    console.log('Database connection test successful');
+    return { connected: true, error: null };
+  } catch (error) {
+    console.error('Database connection test exception:', error);
+    return { connected: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 // Export createClient for use in other files

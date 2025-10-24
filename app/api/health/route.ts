@@ -1,27 +1,15 @@
 // API health check endpoint
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase-client';
+import { testDatabaseConnection } from '@/lib/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
     // Test database connection
-    let dbStatus = 'unknown';
-    try {
-      const { error } = await supabaseServer
-        .from('users')
-        .select('id')
-        .limit(1);
-      
-      if (error) {
-        dbStatus = 'error';
-      } else {
-        dbStatus = 'connected';
-      }
-    } catch (dbError) {
-      dbStatus = 'error';
-    }
+    const connectionTest = await testDatabaseConnection();
+    const dbStatus = connectionTest.connected ? 'connected' : 'error';
+    const dbMessage = connectionTest.connected ? 'Successfully connected to Supabase' : connectionTest.error;
 
     // Test API routes availability
     const routes = {
@@ -35,6 +23,7 @@ export async function GET(request: NextRequest) {
       status: 'ok',
       timestamp: new Date().toISOString(),
       database: dbStatus,
+      databaseMessage: dbMessage,
       routes,
       environment: process.env.NODE_ENV || 'development'
     });
