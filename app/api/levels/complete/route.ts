@@ -75,6 +75,12 @@ export async function POST(request: NextRequest) {
     let aiFeedback = '';
     try {
       const openai = createOpenAIClient(userId, userProfile.subscription_tier as 'free' | 'plus' | 'ultra');
+      
+      if (!openai) {
+        console.warn('OpenAI client not available for level feedback');
+        throw new Error('OpenAI client not available');
+      }
+      
       aiFeedback = await openai.generateLevelFeedback(
         level.level_number,
         level.craving_type,

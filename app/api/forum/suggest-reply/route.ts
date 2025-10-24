@@ -30,6 +30,15 @@ export async function POST(request: NextRequest) {
 
     // Check if user has remaining AI calls
     const openai = createOpenAIClient(userId, userProfile.subscription_tier as 'free' | 'plus' | 'ultra');
+    
+    if (!openai) {
+      console.warn('OpenAI client not available for forum reply suggestion');
+      return NextResponse.json(
+        { error: 'AI features are currently unavailable' },
+        { status: 503 }
+      );
+    }
+    
     const hasRemainingCalls = await openai.hasRemainingCalls();
     
     if (!hasRemainingCalls) {
