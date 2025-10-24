@@ -61,8 +61,8 @@ export async function GET(request: NextRequest) {
     const { data: currentLevel, error: levelError } = await supabaseServer
       .from('levels')
       .select('*')
-      .eq('craving_type', userProfile.primary_craving)
-      .eq('level_number', userProfile.current_level)
+      .eq('craving_type', safeUserProfile.primary_craving)
+      .eq('level_number', safeUserProfile.current_level)
       .single();
 
     if (levelError) {
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     const { data: progress, error: progressError } = await supabaseServer
       .from('user_progress')
       .select('completed_at')
-      .eq('user_id', userProfile.id)
+      .eq('user_id', safeUserProfile.id)
       .eq('level_id', currentLevel.id)
       .single();
 
@@ -86,17 +86,17 @@ export async function GET(request: NextRequest) {
     }
 
     // If current level is completed, get next level
-    if (progress?.completed_at && userProfile.current_level < 30) {
+    if (progress?.completed_at && safeUserProfile.current_level < 30) {
       const { data: nextLevel, error: nextLevelError } = await supabaseServer
         .from('levels')
         .select('*')
-        .eq('craving_type', userProfile.primary_craving)
-        .eq('level_number', userProfile.current_level + 1)
+        .eq('craving_type', safeUserProfile.primary_craving)
+        .eq('level_number', safeUserProfile.current_level + 1)
         .single();
 
       if (!nextLevelError && nextLevel) {
         return NextResponse.json({
-          user: userProfile,
+          user: safeUserProfile,
           currentLevel: nextLevel,
         });
       }
