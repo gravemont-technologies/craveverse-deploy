@@ -106,10 +106,20 @@ const cache: CacheInterface = new MemoryCache();
 export class OpenAIClient {
   private userId: string;
   private userTier: 'free' | 'plus' | 'ultra';
+  private openai: OpenAI | null;
 
   constructor(userId: string, userTier: 'free' | 'plus' | 'ultra') {
     this.userId = userId;
     this.userTier = userTier;
+    this.openai = getOpenAIClient(); // Get once during construction
+  }
+
+  // Ensure OpenAI client is available
+  private ensureClient(): OpenAI {
+    if (!this.openai) {
+      throw new Error('OpenAI client not available');
+    }
+    return this.openai;
   }
 
   // Generate AI response with caching and budget enforcement
@@ -152,7 +162,9 @@ export class OpenAIClient {
 
     try {
       // Make API call
-      const completion = await getOpenAIClient().chat.completions.create({
+      const openai = this.ensureClient();
+      
+      const completion = await openai.chat.completions.create({
         model,
         messages: [{ role: 'user', content: prompt }],
         max_tokens: maxTokens,
