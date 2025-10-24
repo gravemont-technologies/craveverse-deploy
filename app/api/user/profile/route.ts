@@ -41,14 +41,58 @@ export async function GET(request: NextRequest) {
 
         if (createError) {
           console.error('Error creating fallback user:', createError);
-          return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+          // Return minimal profile instead of 500 error
+          return NextResponse.json({
+            user: {
+              id: 'temp',
+              clerk_user_id: userId,
+              name: 'New User',
+              primary_craving: null,
+              current_level: 1,
+              xp: 0,
+              cravecoins: 0,
+              streak_count: 0,
+              subscription_tier: 'free',
+              ai_summary: 'Welcome to CraveVerse!',
+              preferences: {}
+            },
+            currentLevel: null,
+          }, {
+            headers: {
+              'Cache-Control': 'no-store, no-cache, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+            }
+          });
         }
 
         userProfile = newUser;
         console.log(`Fallback user created: ${newUser.id}`);
       } catch (error) {
         console.error('Error in fallback user creation:', error);
-        return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+        // Return minimal profile instead of 500 error
+        return NextResponse.json({
+          user: {
+            id: 'temp',
+            clerk_user_id: userId,
+            name: 'New User',
+            primary_craving: null,
+            current_level: 1,
+            xp: 0,
+            cravecoins: 0,
+            streak_count: 0,
+            subscription_tier: 'free',
+            ai_summary: 'Welcome to CraveVerse!',
+            preferences: {}
+          },
+          currentLevel: null,
+        }, {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          }
+        });
       }
     }
 

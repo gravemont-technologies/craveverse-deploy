@@ -16,12 +16,22 @@ export async function POST(request: NextRequest) {
 
     const { craving, quizAnswers, personalization } = await request.json();
 
-    if (!craving || !personalization) {
+    if (!craving) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Craving selection is required' },
         { status: 400 }
       );
     }
+
+    // Make personalization optional - provide defaults if missing
+    const safePersonalization = personalization || {
+      introMessage: `Welcome to your ${craving} recovery journey! You've got this!`,
+      customHints: [
+        'Start each day with intention',
+        'Track your triggers carefully',
+        'Celebrate small wins'
+      ]
+    };
 
     console.log(`Processing onboarding completion for user: ${userId}, craving: ${craving}`);
 
@@ -75,9 +85,9 @@ export async function POST(request: NextRequest) {
         preferences: {
           ...userProfile.preferences,
           quizAnswers,
-          customHints: personalization?.customHints || [],
+          customHints: safePersonalization.customHints,
         },
-        ai_summary: personalization?.introMessage || `Welcome to your ${craving} recovery journey!`,
+        ai_summary: safePersonalization.introMessage,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userProfile.id);
@@ -126,7 +136,7 @@ export async function POST(request: NextRequest) {
           metadata: {
             craving,
             quizAnswers,
-            personalization,
+            personalization: safePersonalization,
           },
         });
     } catch (logError) {

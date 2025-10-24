@@ -125,32 +125,31 @@ export default function DashboardPage() {
     );
   }
 
-  if (!userProfile) {
-    console.log('Dashboard: No user profile found, redirecting to onboarding');
+  // Check if user profile exists and onboarding is completed
+  if (!userProfile || !userProfile.primary_craving) {
+    const status = !userProfile ? 'No profile found' : 'Onboarding incomplete';
+    console.log(`Dashboard: ${status}, showing setup options`);
+    
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">Welcome to CraveVerse</h1>
-          <p className="text-muted-foreground">Please complete your onboarding first.</p>
-          <Button onClick={() => router.push('/onboarding')}>
-            Start Onboarding
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if onboarding is completed (has primary_craving)
-  if (!userProfile.primary_craving) {
-    console.log('Dashboard: User profile exists but no primary_craving, redirecting to onboarding');
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Welcome to CraveVerse</h1>
-          <p className="text-muted-foreground">Please complete your onboarding first.</p>
-          <Button onClick={() => router.push('/onboarding')}>
-            Start Onboarding
-          </Button>
+          <p className="text-muted-foreground">
+            {!userProfile 
+              ? 'Please complete your setup to get started.' 
+              : 'Please complete your onboarding to access the dashboard.'
+            }
+          </p>
+          <div className="space-x-4">
+            <Button onClick={() => router.push('/onboarding')}>
+              {!userProfile ? 'Start Setup' : 'Complete Onboarding'}
+            </Button>
+            {userProfile && (
+              <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                Try Again
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );

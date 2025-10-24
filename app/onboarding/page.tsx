@@ -103,7 +103,7 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
-    if (!onboardingData.selectedCraving || !onboardingData.personalization) return;
+    if (!onboardingData.selectedCraving) return;
 
     setIsLoading(true);
 
@@ -245,6 +245,28 @@ export default function OnboardingPage() {
                   <p className="text-muted-foreground">
                     Generating personalized insights and recommendations...
                   </p>
+                  <div className="pt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        console.log('Onboarding: Skipping personalization, using defaults');
+                        setOnboardingData(prev => ({
+                          ...prev,
+                          personalization: {
+                            introMessage: `Welcome to your ${onboardingData.selectedCraving} recovery journey! You've got this!`,
+                            customHints: [
+                              'Start each day with intention',
+                              'Track your triggers carefully',
+                              'Celebrate small wins'
+                            ]
+                          }
+                        }));
+                        setCurrentStep(4);
+                      }}
+                    >
+                      Skip Personalization
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
