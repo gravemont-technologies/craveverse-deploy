@@ -125,42 +125,73 @@ export default function DashboardPage() {
     );
   }
 
+  // Check for emergency bypass FIRST (before database checks)
+  const urlParams = new URLSearchParams(window.location.search);
+  const skipOnboarding = urlParams.get('skipOnboarding');
+  const emergencyBypass = localStorage.getItem('emergencyBypass') === 'true';
+  
+  if (skipOnboarding === 'true' || emergencyBypass) {
+    console.log('Dashboard: Emergency bypass activated - bypassing database checks');
+    
+    // Set emergency bypass data in localStorage
+    if (skipOnboarding === 'true') {
+      localStorage.setItem('emergencyBypass', 'true');
+      localStorage.setItem('onboardingData', JSON.stringify({
+        selectedCraving: 'nofap',
+        completed: true,
+        emergencyBypass: true
+      }));
+    }
+    
+    // Show emergency bypass dashboard
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h2 className="text-lg font-semibold text-yellow-800">Emergency Mode Active</h2>
+            <p className="text-yellow-700">Database connection unavailable. You can complete onboarding later.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-xl font-bold mb-2">🚫 NoFap Journey</h3>
+              <p className="text-gray-600 mb-4">Overcome pornography addiction and build self-control</p>
+              <div className="text-sm text-gray-500">Emergency Mode - Complete setup later</div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-xl font-bold mb-2">📊 Your Progress</h3>
+              <p className="text-gray-600 mb-4">Track your journey and celebrate wins</p>
+              <div className="text-sm text-gray-500">Emergency Mode - Data will sync when available</div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-xl font-bold mb-2">🏆 Community</h3>
+              <p className="text-gray-600 mb-4">Connect with others on similar journeys</p>
+              <div className="text-sm text-gray-500">Emergency Mode - Limited features</div>
+            </div>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Button onClick={() => router.push('/onboarding')} className="mr-4">
+              Complete Full Setup
+            </Button>
+            <Button variant="outline" onClick={() => {
+              localStorage.removeItem('emergencyBypass');
+              window.location.reload();
+            }}>
+              Exit Emergency Mode
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Check if user profile exists and onboarding is completed
   if (!userProfile || !userProfile.primary_craving) {
     const status = !userProfile ? 'No profile found' : 'Onboarding incomplete';
     console.log(`Dashboard: ${status}, showing setup options`);
-    
-    // Check for emergency bypass
-    const urlParams = new URLSearchParams(window.location.search);
-    const skipOnboarding = urlParams.get('skipOnboarding');
-    
-    if (skipOnboarding === 'true' && userProfile) {
-      console.log('Dashboard: Emergency bypass activated, setting default craving');
-      // Set a default craving to bypass the loop
-      const defaultCraving = 'nofap'; // Default to nofap
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <h1 className="text-2xl font-bold">Welcome to CraveVerse</h1>
-            <p className="text-muted-foreground">
-              Emergency bypass activated. You can complete your onboarding later.
-            </p>
-            <div className="space-x-4">
-              <Button onClick={() => {
-                // Set default craving and reload
-                localStorage.setItem('emergencyBypass', 'true');
-                window.location.href = '/dashboard';
-              }}>
-                Continue to Dashboard
-              </Button>
-              <Button variant="outline" onClick={() => router.push('/onboarding')}>
-                Complete Onboarding
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
     
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">

@@ -167,13 +167,28 @@ export default function OnboardingPage() {
       }
 
       if (!verificationPassed) {
-        console.warn('Onboarding: Verification failed after retries, proceeding anyway');
+        console.warn('Onboarding: Verification failed after retries, using localStorage fallback');
+        
+        // Store onboarding data in localStorage as fallback
+        localStorage.setItem('onboardingData', JSON.stringify({
+          selectedCraving: onboardingData.selectedCraving,
+          quizAnswers: onboardingData.quizAnswers,
+          personalization: onboardingData.personalization,
+          completed: true,
+          completedAt: new Date().toISOString()
+        }));
+        
+        console.log('Onboarding: Data stored in localStorage as fallback');
       }
 
       // Check user state after completion
-      const debugResponse = await fetch('/api/debug/user-state');
-      const debugData = await debugResponse.json();
-      console.log('Onboarding: User state after completion:', debugData);
+      try {
+        const debugResponse = await fetch('/api/debug/user-state');
+        const debugData = await debugResponse.json();
+        console.log('Onboarding: User state after completion:', debugData);
+      } catch (debugError) {
+        console.warn('Onboarding: Debug endpoint unavailable, using localStorage fallback');
+      }
 
       // Redirect to dashboard
       console.log('Onboarding: Redirecting to dashboard...');
