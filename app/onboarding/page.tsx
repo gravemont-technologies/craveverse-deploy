@@ -135,6 +135,26 @@ export default function OnboardingPage() {
       const result = await response.json();
       console.log('Onboarding: Completion successful:', result);
 
+      // Wait for DB propagation
+      console.log('Onboarding: Waiting for database update to propagate...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Verify update completed
+      console.log('Onboarding: Verifying update completed...');
+      const verifyResponse = await fetch(`/api/user/profile?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
+      const verifyData = await verifyResponse.json();
+
+      if (!verifyData.user?.primary_craving) {
+        console.error('Onboarding: Update not reflected, retrying...');
+        // Retry once
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       // Check user state after completion
       const debugResponse = await fetch('/api/debug/user-state');
       const debugData = await debugResponse.json();

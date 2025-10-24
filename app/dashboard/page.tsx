@@ -65,11 +65,6 @@ export default function DashboardPage() {
     }
   }, [isLoaded, user]);
 
-  useEffect(() => {
-    if (user) {
-      fetchUserData();
-    }
-  }, [user]);
 
   const fetchUserData = async () => {
     try {
@@ -80,7 +75,12 @@ export default function DashboardPage() {
       const debugData = await debugResponse.json();
       console.log('Dashboard: Debug user state:', debugData);
       
-      const response = await fetch('/api/user/profile');
+      const response = await fetch(`/api/user/profile?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
       console.log('Dashboard: Profile API response status:', response.status);
       
       if (response.ok) {

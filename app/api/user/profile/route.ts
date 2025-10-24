@@ -105,6 +105,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       user: safeUserProfile,
       currentLevel: currentLevel || null,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
     });
   } catch (error) {
     console.error('Profile fetch error:', error);
