@@ -6,6 +6,8 @@ import { updateUserProfile } from '../../../../lib/auth-utils';
 import { QueueUtils } from '../../../../lib/queue';
 
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();

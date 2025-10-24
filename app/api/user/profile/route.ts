@@ -4,6 +4,8 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseServer } from '@/lib/supabase-client';
 import { getCurrentUserProfile } from '../../../../lib/auth-utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();

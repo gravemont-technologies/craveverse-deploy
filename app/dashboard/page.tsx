@@ -130,6 +130,38 @@ export default function DashboardPage() {
     const status = !userProfile ? 'No profile found' : 'Onboarding incomplete';
     console.log(`Dashboard: ${status}, showing setup options`);
     
+    // Check for emergency bypass
+    const urlParams = new URLSearchParams(window.location.search);
+    const skipOnboarding = urlParams.get('skipOnboarding');
+    
+    if (skipOnboarding === 'true' && userProfile) {
+      console.log('Dashboard: Emergency bypass activated, setting default craving');
+      // Set a default craving to bypass the loop
+      const defaultCraving = 'nofap'; // Default to nofap
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <h1 className="text-2xl font-bold">Welcome to CraveVerse</h1>
+            <p className="text-muted-foreground">
+              Emergency bypass activated. You can complete your onboarding later.
+            </p>
+            <div className="space-x-4">
+              <Button onClick={() => {
+                // Set default craving and reload
+                localStorage.setItem('emergencyBypass', 'true');
+                window.location.href = '/dashboard';
+              }}>
+                Continue to Dashboard
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/onboarding')}>
+                Complete Onboarding
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -145,8 +177,19 @@ export default function DashboardPage() {
               {!userProfile ? 'Start Setup' : 'Complete Onboarding'}
             </Button>
             {userProfile && (
-              <Button variant="outline" onClick={() => router.push('/dashboard')}>
-                Try Again
+              <Button variant="outline" onClick={() => {
+                // Force refresh profile data instead of redirecting
+                window.location.reload();
+              }}>
+                Refresh Profile
+              </Button>
+            )}
+            {userProfile && (
+              <Button variant="outline" onClick={() => {
+                // Emergency bypass
+                window.location.href = '/dashboard?skipOnboarding=true';
+              }}>
+                Emergency Bypass
               </Button>
             )}
           </div>

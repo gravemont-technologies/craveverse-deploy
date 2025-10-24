@@ -135,24 +135,39 @@ export default function OnboardingPage() {
       const result = await response.json();
       console.log('Onboarding: Completion successful:', result);
 
-      // Wait for DB propagation
+      // Wait for DB propagation with longer delay
       console.log('Onboarding: Waiting for database update to propagate...');
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Verify update completed
+      // Verify update completed with retry logic
       console.log('Onboarding: Verifying update completed...');
-      const verifyResponse = await fetch(`/api/user/profile?t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        }
-      });
-      const verifyData = await verifyResponse.json();
+      let verificationPassed = false;
+      let retryCount = 0;
+      const maxRetries = 3;
 
-      if (!verifyData.user?.primary_craving) {
-        console.error('Onboarding: Update not reflected, retrying...');
-        // Retry once
-        await new Promise(resolve => setTimeout(resolve, 500));
+      while (!verificationPassed && retryCount < maxRetries) {
+        const verifyResponse = await fetch(`/api/user/profile?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          }
+        });
+        const verifyData = await verifyResponse.json();
+
+        if (verifyData.user?.primary_craving) {
+          console.log('Onboarding: Verification successful');
+          verificationPassed = true;
+        } else {
+          retryCount++;
+          console.error(`Onboarding: Update not reflected, retry ${retryCount}/${maxRetries}...`);
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
+
+      if (!verificationPassed) {
+        console.warn('Onboarding: Verification failed after retries, proceeding anyway');
       }
 
       // Check user state after completion

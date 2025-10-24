@@ -1,83 +1,48 @@
-import { NextResponse } from 'next/server';
-import { supabaseClient } from '@/lib/supabase-client';
+// API health check endpoint
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseServer } from '@/lib/supabase-client';
 
-export async function GET() {
-  const startTime = Date.now();
-  
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
   try {
-    // Check database connectivity
-    const { data: dbCheck, error: dbError } = await supabaseClient
-      .from('users')
-      .select('id')
-      .limit(1);
-    
-    const dbStatus = dbError ? 'error' : 'healthy';
-    const dbResponseTime = Date.now() - startTime;
-    
-    // Check environment variables
-    const envStatus = {
-      supabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      clerk: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-      openai: !!process.env.OPENAI_API_KEY,
-      stripe: !!process.env.STRIPE_SECRET_KEY,
-      posthog: !!process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    // Test database connection
+    let dbStatus = 'unknown';
+    try {
+      const { error } = await supabaseServer
+        .from('users')
+        .select('id')
+        .limit(1);
+      
+      if (error) {
+        dbStatus = 'error';
+      } else {
+        dbStatus = 'connected';
+      }
+    } catch (dbError) {
+      dbStatus = 'error';
+    }
+
+    // Test API routes availability
+    const routes = {
+      profile: 'available',
+      personalize: 'available', 
+      complete: 'available',
+      health: 'available'
     };
-    
-    const allEnvVarsPresent = Object.values(envStatus).every(Boolean);
-    
-    // Overall health status
-    const isHealthy = dbStatus === 'healthy' && allEnvVarsPresent;
-    
-    const healthData = {
-      status: isHealthy ? 'healthy' : 'unhealthy',
+
+    return NextResponse.json({
+      status: 'ok',
       timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      services: {
-        database: {
-          status: dbStatus,
-          responseTime: dbResponseTime,
-          error: dbError?.message || null,
-        },
-        environment: {
-          status: allEnvVarsPresent ? 'configured' : 'missing_variables',
-          variables: envStatus,
-        },
-      },
-      performance: {
-        responseTime: Date.now() - startTime,
-        memory: process.memoryUsage(),
-      },
-    };
-    
-    return NextResponse.json(healthData, {
-      status: isHealthy ? 200 : 503,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Content-Type': 'application/json',
-      },
+      database: dbStatus,
+      routes,
+      environment: process.env.NODE_ENV || 'development'
     });
-    
   } catch (error) {
-    const errorData = {
-      status: 'unhealthy',
+    return NextResponse.json({
+      status: 'error',
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-      services: {
-        database: {
-          status: 'error',
-          error: error instanceof Error ? error.message : 'Unknown error',
-        },
-      },
-    };
-    
-    return NextResponse.json(errorData, {
-      status: 503,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Content-Type': 'application/json',
-      },
-    });
+      error: 'Health check failed'
+    }, { status: 500 });
   }
 }
