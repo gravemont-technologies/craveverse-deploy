@@ -67,10 +67,19 @@ export async function GET(request: NextRequest) {
 
     if (levelError) {
       console.error('Error fetching current level:', levelError);
-      return NextResponse.json(
-        { error: 'Failed to fetch current level' },
-        { status: 500 }
-      );
+      
+      // FALLBACK: Return user without level (don't crash)
+      console.log('Returning user without level due to error');
+      return NextResponse.json({
+        user: safeUserProfile,
+        currentLevel: null,
+      }, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      });
     }
 
     // Check if current level is completed

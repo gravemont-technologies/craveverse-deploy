@@ -5,11 +5,12 @@ import { CONFIG, AIModelType } from './config';
 // Lazy initialization of OpenAI client
 let openai: OpenAI | null = null;
 
-function getOpenAIClient(): OpenAI {
+function getOpenAIClient(): OpenAI | null {
   if (!openai) {
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Missing OPENAI_API_KEY environment variable. Please check your .env.local file.');
+    if (!apiKey || apiKey.includes('placeholder')) {
+      console.warn('OpenAI API key not configured, AI features will be disabled');
+      return null;
     }
     openai = new OpenAI({
       apiKey,
@@ -374,5 +375,10 @@ export class OpenAIClient {
 
 // Export singleton instances for different tiers
 export const createOpenAIClient = (userId: string, tier: 'free' | 'plus' | 'ultra') => {
+  const openai = getOpenAIClient();
+  if (!openai) {
+    console.warn('OpenAI client not available, returning null');
+    return null;
+  }
   return new OpenAIClient(userId, tier);
 };

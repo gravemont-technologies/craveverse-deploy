@@ -75,9 +75,9 @@ export async function POST(request: NextRequest) {
         preferences: {
           ...userProfile.preferences,
           quizAnswers,
-          customHints: personalization.customHints,
+          customHints: personalization?.customHints || [],
         },
-        ai_summary: personalization.introMessage,
+        ai_summary: personalization?.introMessage || `Welcome to your ${craving} recovery journey!`,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userProfile.id);

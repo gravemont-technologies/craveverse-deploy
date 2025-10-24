@@ -72,13 +72,37 @@ export async function POST(request: NextRequest) {
     // Create OpenAI client with guaranteed non-null userProfile
     const openai = createOpenAIClient(userId, safeUserProfile.subscription_tier as 'free' | 'plus' | 'ultra');
 
-    // Generate personalization
-    const personalization = await openai.generateOnboardingPersonalization(
-      quizAnswers,
-      craving
-    );
-
-    return NextResponse.json(personalization);
+    // Try AI personalization with fallback
+    try {
+      if (openai) {
+        console.log('Attempting AI personalization...');
+        const personalization = await openai.generateOnboardingPersonalization(
+          quizAnswers,
+          craving
+        );
+        console.log('AI personalization successful');
+        return NextResponse.json(personalization);
+      } else {
+        console.log('OpenAI client not available, using fallback');
+        throw new Error('OpenAI client not available');
+      }
+    } catch (aiError) {
+      console.error('AI personalization failed, using fallback:', aiError);
+      
+      // FALLBACK: Return hardcoded personalization
+      const fallbackPersonalization = {
+        introMessage: `Welcome to your ${craving} recovery journey! You've got this!`,
+        customHints: [
+          `Stay focused on your ${craving} recovery goals`,
+          'Take it one day at a time',
+          'Celebrate small victories',
+          'Remember why you started this journey'
+        ]
+      };
+      
+      console.log('Returning fallback personalization');
+      return NextResponse.json(fallbackPersonalization);
+    }
   } catch (error) {
     console.error('Personalization error:', error);
     
