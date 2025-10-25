@@ -14,6 +14,15 @@ export async function GET(request: NextRequest) {
   try {
     logger.info('Profile API request started');
     
+    // NEW: Enhanced request logging
+    const requestHeaders = Object.fromEntries(request.headers.entries());
+    logger.info('Profile API request headers', { 
+      cacheControl: requestHeaders['cache-control'],
+      pragma: requestHeaders['pragma'],
+      ifModifiedSince: requestHeaders['if-modified-since'],
+      ifNoneMatch: requestHeaders['if-none-match']
+    });
+    
     const { userId } = await auth();
     
     if (!userId) {
@@ -68,10 +77,11 @@ export async function GET(request: NextRequest) {
             currentLevel: null,
           }, {
             headers: {
-              'Cache-Control': 'no-store, no-cache, must-revalidate',
+              'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
               'Pragma': 'no-cache',
               'Expires': '0',
               'x-trace-id': traceId,
+              'x-profile-timestamp': new Date().toISOString(), // NEW: Add timestamp
             }
           });
         }
@@ -98,10 +108,11 @@ export async function GET(request: NextRequest) {
           currentLevel: null,
         }, {
           headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma': 'no-cache',
             'Expires': '0',
             'x-trace-id': traceId,
+            'x-profile-timestamp': new Date().toISOString(), // NEW: Add timestamp
           }
         });
       }
@@ -132,12 +143,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         user: safeUserProfile,
         currentLevel: null,
+        timestamp: new Date().toISOString(), // NEW: Add timestamp for debugging
       }, {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
           'Pragma': 'no-cache',
           'Expires': '0',
           'x-trace-id': traceId,
+          'x-profile-timestamp': new Date().toISOString(), // NEW: Enhanced headers
         }
       });
     }
@@ -168,12 +181,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           user: safeUserProfile,
           currentLevel: nextLevel,
+          timestamp: new Date().toISOString(), // NEW: Add timestamp
         }, {
           headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma': 'no-cache',
             'Expires': '0',
             'x-trace-id': traceId,
+            'x-profile-timestamp': new Date().toISOString(), // NEW: Enhanced headers
           }
         });
       }
@@ -183,12 +198,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       user: safeUserProfile,
       currentLevel: currentLevel || null,
+      timestamp: new Date().toISOString(), // NEW: Add timestamp for debugging
     }, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         'Pragma': 'no-cache',
         'Expires': '0',
         'x-trace-id': traceId,
+        'x-profile-timestamp': new Date().toISOString(), // NEW: Enhanced cache headers
       }
     });
   } catch (error) {
@@ -210,12 +227,14 @@ export async function GET(request: NextRequest) {
         preferences: {}
       },
       currentLevel: null,
+      timestamp: new Date().toISOString(), // NEW: Add timestamp
     }, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         'Pragma': 'no-cache',
         'Expires': '0',
         'x-trace-id': traceId,
+        'x-profile-timestamp': new Date().toISOString(), // NEW: Enhanced headers
       }
     });
   }

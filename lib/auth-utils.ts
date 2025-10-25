@@ -212,7 +212,8 @@ export async function getRemainingAICalls(userId: string): Promise<number> {
       return 0;
     }
 
-    const totalTokens = data.reduce((sum, record) => sum + record.tokens_used, 0);
+    // FIXED: Added type annotation for sum parameter
+    const totalTokens = data.reduce((sum: number, record) => sum + record.tokens_used, 0);
     
     // Calculate remaining calls based on tier
     const limits = {

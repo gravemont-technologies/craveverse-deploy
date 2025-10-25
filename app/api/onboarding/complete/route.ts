@@ -122,6 +122,35 @@ export async function POST(request: NextRequest) {
       primary_craving: craving 
     });
 
+    // ⚠️ CRITICAL: VERIFY THE UPDATE WORKED IMMEDIATELY
+    logger.info('Verifying database update...', { user_id: userProfile.id });
+
+    const { data: verifiedUser, error: verifyError } = await supabaseServer
+      .from('users')
+      .select('primary_craving, clerk_user_id')
+      .eq('id', userProfile.id)
+      .single();
+
+    if (verifyError) {
+      logger.error('Error verifying update', { error: verifyError.message });
+    } else {
+      logger.info('DATABASE VERIFICATION RESULT', {
+        user_id: userProfile.id,
+        expected_craving: craving,
+        actual_craving_in_db: verifiedUser?.primary_craving,
+        clerk_user_id_match: verifiedUser?.clerk_user_id === userId,
+        update_successful: verifiedUser?.primary_craving === craving
+      });
+      
+      if (verifiedUser?.primary_craving !== craving) {
+        logger.error('DATABASE UPDATE VERIFICATION FAILED', {
+          expected: craving,
+          actual: verifiedUser?.primary_craving,
+          user_id: userProfile.id
+        });
+      }
+    }
+
     // Schedule AI personalization job for batch processing
     try {
       await QueueUtils.scheduleOnboardingPersonalization([userProfile.id], craving);

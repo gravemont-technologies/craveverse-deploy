@@ -15,19 +15,14 @@ import { CravingSelector } from '../../components/onboarding/craving-selector';
 import { OnboardingQuiz } from '../../components/onboarding/onboarding-quiz';
 import { PersonalizationResults } from '../../components/onboarding/personalization-results';
 import { CONFIG } from '../../lib/config';
-
-interface OnboardingData {
-  selectedCraving: string | null;
-  quizAnswers: Record<string, any>;
-  personalization: {
-    introMessage: string;
-    customHints: string[];
-  } | null;
-}
+import { useUserContext } from '@/contexts/user-context'; // NEW: Import context
+import { useLogger } from '@/lib/logger'; // NEW: Import logger
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
+  const { refreshProfile, forceRefreshProfile } = useUserContext(); // NEW: Get refresh methods
+  const logger = useLogger('OnboardingPage'); // NEW: Use logger
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     selectedCraving: null,
@@ -108,14 +103,16 @@ export default function OnboardingPage() {
     setIsLoading(true);
 
     try {
-      console.log('Onboarding: Starting completion process...');
-      console.log('Onboarding: Selected craving:', onboardingData.selectedCraving);
-      console.log('Onboarding: Personalization data:', onboardingData.personalization);
+      logger.info('Starting onboarding completion process', { 
+        craving: onboardingData.selectedCraving,
+        hasPersonalization: !!onboardingData.personalization 
+      });
 
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-trace-id': logger.getTraceId(),
         },
         body: JSON.stringify({
           craving: onboardingData.selectedCraving,
@@ -124,79 +121,48 @@ export default function OnboardingPage() {
         }),
       });
 
-      console.log('Onboarding: API response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Onboarding: API error response:', errorData);
+        logger.error('Onboarding completion API error', { status: response.status, error: errorData });
         throw new Error('Failed to complete onboarding');
       }
 
       const result = await response.json();
-      console.log('Onboarding: Completion successful:', result);
+      logger.info('Onboarding completion successful', { result });
 
-      // Wait for DB propagation with longer delay
-      console.log('Onboarding: Waiting for database update to propagate...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Verify update completed with retry logic
-      console.log('Onboarding: Verifying update completed...');
-      let verificationPassed = false;
-      let retryCount = 0;
-      const maxRetries = 3;
-
-      while (!verificationPassed && retryCount < maxRetries) {
-        const verifyResponse = await fetch(`/api/user/profile?t=${Date.now()}`, {
-          cache: 'no-store',
+      // Enhanced verification with context refresh
+      if (forceRefreshProfile) {
+        logger.info('Force refreshing user context after onboarding');
+        await forceRefreshProfile();
+        
+        // Additional verification with API call
+        const verifyResponse = await fetch(`/api/user/profile?t=${Date.now()}&force=true`, {
           headers: {
             'Cache-Control': 'no-cache',
-          }
+            'x-trace-id': logger.getTraceId() + '-verify',
+          },
         });
-        const verifyData = await verifyResponse.json();
-
-        if (verifyData.user?.primary_craving) {
-          console.log('Onboarding: Verification successful');
-          verificationPassed = true;
-        } else {
-          retryCount++;
-          console.error(`Onboarding: Update not reflected, retry ${retryCount}/${maxRetries}...`);
-          if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-          }
+        
+        if (verifyResponse.ok) {
+          const verifyData = await verifyResponse.json();
+          logger.info('Final verification result', {
+            primary_craving: verifyData.user?.primary_craving,
+            hasProfile: !!verifyData.user
+          });
         }
       }
 
-      if (!verificationPassed) {
-        console.warn('Onboarding: Verification failed after retries, using localStorage fallback');
-        
-        // Store onboarding data in localStorage as fallback
-        localStorage.setItem('onboardingData', JSON.stringify({
-          selectedCraving: onboardingData.selectedCraving,
-          quizAnswers: onboardingData.quizAnswers,
-          personalization: onboardingData.personalization,
-          completed: true,
-          completedAt: new Date().toISOString()
-        }));
-        
-        console.log('Onboarding: Data stored in localStorage as fallback');
-      }
-
-      // Check user state after completion
-      try {
-        const debugResponse = await fetch('/api/debug/user-state');
-        const debugData = await debugResponse.json();
-        console.log('Onboarding: User state after completion:', debugData);
-      } catch (debugError) {
-        console.warn('Onboarding: Debug endpoint unavailable, using localStorage fallback');
-      }
+      // Use a small delay to ensure state updates propagate
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Redirect to dashboard
-      console.log('Onboarding: Redirecting to dashboard...');
+      logger.info('Redirecting to dashboard after onboarding completion');
       router.push('/dashboard');
+      
     } catch (error) {
-      console.error('Onboarding completion error:', error);
-      // Still redirect to dashboard
-      console.log('Onboarding: Error occurred, still redirecting to dashboard...');
+      logger.error('Onboarding completion error', { error: error instanceof Error ? error.message : 'Unknown error' });
+      // Still redirect to dashboard with fallback
+      logger.info('Error occurred, still redirecting to dashboard with fallback...');
       router.push('/dashboard');
     } finally {
       setIsLoading(false);
@@ -279,7 +245,7 @@ export default function OnboardingPage() {
                     <Button 
                       variant="outline" 
                       onClick={() => {
-                        console.log('Onboarding: Skipping personalization, using defaults');
+                        logger.info('Skipping personalization, using defaults');
                         setOnboardingData(prev => ({
                           ...prev,
                           personalization: {
