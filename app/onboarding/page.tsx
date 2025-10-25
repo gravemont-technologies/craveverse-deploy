@@ -21,7 +21,7 @@ import { useLogger } from '@/lib/logger'; // NEW: Import logger
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
-  const { refreshProfile, forceRefreshProfile } = useUserContext(); // NEW: Get refresh methods
+  const { refreshProfile } = useUserContext(); // NEW: Get refresh methods
   const logger = useLogger('OnboardingPage'); // NEW: Use logger
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
