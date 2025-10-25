@@ -142,20 +142,23 @@ export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
 // Get user's subscription tier
 export async function getUserSubscriptionTier(userId: string): Promise<'free' | 'plus' | 'plus_trial' | 'ultra'> {
   try {
-    const { data, error } = await supabase
+    logger.debug('Fetching subscription tier', { user_id: userId });
+
+    const { data, error } = await supabaseServer
       .from('users')
       .select('subscription_tier')
       .eq('id', userId)
       .single();
 
     if (error) {
-      console.error('Error fetching subscription tier:', error);
+      logger.error('Error fetching subscription tier', { error: error.message, user_id: userId });
       return 'free';
     }
 
+    logger.debug('Subscription tier fetched', { user_id: userId, tier: data.subscription_tier });
     return data.subscription_tier;
   } catch (error) {
-    console.error('Error in getUserSubscriptionTier:', error);
+    logger.error('Exception in getUserSubscriptionTier', { error: error instanceof Error ? error.message : 'Unknown error', user_id: userId });
     return 'free';
   }
 }
@@ -195,15 +198,17 @@ export async function getRemainingAICalls(userId: string): Promise<number> {
     // Get today's date
     const today = new Date().toISOString().split('T')[0];
     
+    logger.debug('Fetching AI usage', { user_id: userId, tier, today });
+    
     // Get current usage from cache or database
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServer
       .from('ai_usage_metrics')
       .select('tokens_used')
       .eq('user_id', userId)
       .gte('created_at', today);
 
     if (error) {
-      console.error('Error fetching AI usage:', error);
+      logger.error('Error fetching AI usage', { error: error.message, user_id: userId });
       return 0;
     }
 
@@ -219,10 +224,12 @@ export async function getRemainingAICalls(userId: string): Promise<number> {
 
     const limit = limits[tier];
     const estimatedCallsUsed = Math.floor(totalTokens / 100); // Rough estimation
+    const remaining = Math.max(0, limit - estimatedCallsUsed);
     
-    return Math.max(0, limit - estimatedCallsUsed);
+    logger.debug('AI calls calculated', { user_id: userId, totalTokens, limit, estimatedCallsUsed, remaining });
+    return remaining;
   } catch (error) {
-    console.error('Error in getRemainingAICalls:', error);
+    logger.error('Exception in getRemainingAICalls', { error: error instanceof Error ? error.message : 'Unknown error', user_id: userId });
     return 0;
   }
 }
@@ -230,31 +237,37 @@ export async function getRemainingAICalls(userId: string): Promise<number> {
 // Check if user is in trial period
 export async function isInTrialPeriod(userId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    logger.debug('Checking trial status', { user_id: userId });
+
+    const { data, error } = await supabaseServer
       .from('users')
       .select('subscription_tier, trial_ends_at')
       .eq('id', userId)
       .single();
 
     if (error) {
-      console.error('Error checking trial status:', error);
+      logger.error('Error checking trial status', { error: error.message, user_id: userId });
       return false;
     }
 
     if (data.subscription_tier !== 'plus_trial') {
+      logger.debug('User not in trial tier', { user_id: userId, tier: data.subscription_tier });
       return false;
     }
 
     if (!data.trial_ends_at) {
+      logger.debug('No trial end date', { user_id: userId });
       return false;
     }
 
     const trialEndsAt = new Date(data.trial_ends_at);
     const now = new Date();
+    const isInTrial = now < trialEndsAt;
 
-    return now < trialEndsAt;
+    logger.debug('Trial status checked', { user_id: userId, trial_ends_at: data.trial_ends_at, isInTrial });
+    return isInTrial;
   } catch (error) {
-    console.error('Error in isInTrialPeriod:', error);
+    logger.error('Exception in isInTrialPeriod', { error: error instanceof Error ? error.message : 'Unknown error', user_id: userId });
     return false;
   }
 }
@@ -268,14 +281,16 @@ export async function getUserProgressStats(userId: string): Promise<{
   currentLevel: number;
 }> {
   try {
-    const { data, error } = await supabase
+    logger.debug('Fetching progress stats', { user_id: userId });
+
+    const { data, error } = await supabaseServer
       .from('users')
       .select('current_level, xp, cravecoins, streak_count')
       .eq('id', userId)
       .single();
 
     if (error) {
-      console.error('Error fetching progress stats:', error);
+      logger.error('Error fetching progress stats', { error: error.message, user_id: userId });
       return {
         totalLevelsCompleted: 0,
         currentStreak: 0,
@@ -286,21 +301,24 @@ export async function getUserProgressStats(userId: string): Promise<{
     }
 
     // Get completed levels count
-    const { count: completedLevels } = await supabase
+    const { count: completedLevels } = await supabaseServer
       .from('user_progress')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .not('completed_at', 'is', null);
 
-    return {
+    const stats = {
       totalLevelsCompleted: completedLevels || 0,
       currentStreak: data.streak_count,
       totalXP: data.xp,
       totalCoins: data.cravecoins,
       currentLevel: data.current_level,
     };
+
+    logger.debug('Progress stats fetched', { user_id: userId, stats });
+    return stats;
   } catch (error) {
-    console.error('Error in getUserProgressStats:', error);
+    logger.error('Exception in getUserProgressStats', { error: error instanceof Error ? error.message : 'Unknown error', user_id: userId });
     return {
       totalLevelsCompleted: 0,
       currentStreak: 0,
